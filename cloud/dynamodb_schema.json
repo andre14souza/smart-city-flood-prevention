@@ -1,0 +1,17 @@
+{
+  "Description": "Tabela Amazon DynamoDB para o Protótipo de Bueiros Inteligentes",
+  "Tables": [
+    {
+      "TableName": "FloodSensorReadings",
+      "BillingMode": "PAY_PER_REQUEST",
+      "KeySchema": [
+        { "AttributeName": "sensor_id", "KeyType": "HASH" },
+        { "AttributeName": "timestamp", "KeyType": "RANGE" }
+      ],
+      "AttributeDefinitions": [
+        { "AttributeName": "sensor_id", "AttributeType": "S" },
+        { "AttributeName": "timestamp", "AttributeType": "N" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIMP-SP • Monitoramento Pluvial em Tempo Real</title>
+  <meta name="description" content="Sistema de telemetria hidrológica para prevenção de enchentes em São Paulo.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <canvas id="rainOverlay"></canvas>
+
+  <div class="layout-shell">
+
+    <!-- HEADER -->
+    <header class="institutional-bar" role="banner">
+      <div class="institutional-brand">
+        <div class="emblem-badge">SP</div>
+        <div class="brand-titles">
+          <h1>SIMP-SP — Monitoramento Pluvial</h1>
+          <p>Defesa Civil Municipal · Gestão de Bacias Hidrográficas · São Paulo</p>
+        </div>
+      </div>
+
+      <div class="operational-status-group">
+        <div class="telemetry-indicator">
+          <span class="pulse-dot"></span>
+          <span>Telemetria ativa (MQTT)</span>
+        </div>
+        <div class="telemetry-indicator">
+          <span class="pulse-dot" style="background:#2563eb;"></span>
+          <span>AWS sa-east-1 online</span>
+        </div>
+        <div class="tabular-clock" id="liveClock">--:--:-- UTC-3</div>
+      </div>
+
+      <div class="top-buttons">
+        <button id="toggleAudioBtn" class="btn btn-secondary">🔔 Sirene: Ativa</button>
+        <button id="openModalBtn" class="btn btn-primary">Documentação técnica</button>
+      </div>
+    </header>
+
+    <!-- BARRA DE CONTROLE -->
+    <section class="control-ribbon" aria-label="Controle de precipitação">
+      <div class="ribbon-label">
+        <span class="section-title">Simulação de precipitação</span>
+        <span class="section-subtitle">Selecione um cenário ou ajuste manualmente</span>
+      </div>
+
+      <div class="preset-button-group">
+        <button class="preset-pill active" data-rain="0">Estio (0 mm/h)</button>
+        <button class="preset-pill" data-rain="20">Chuva moderada (20 mm/h)</button>
+        <button class="preset-pill" data-rain="65">Tempestade (65 mm/h)</button>
+        <button class="preset-pill" data-rain="120">Enxurrada crítica (120 mm/h)</button>
+      </div>
+
+      <div class="slider-container">
+        <span>Intensidade:</span>
+        <input type="range" id="rainSlider" class="pluvio-range" min="0" max="140" value="0">
+        <strong id="rainValueDisplay">0 mm/h</strong>
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <button id="toggleBlockageBtn" class="btn btn-secondary">Simular obstrução</button>
+        <button id="resetSystemBtn" class="btn btn-secondary">Normalizar bacia</button>
+      </div>
+    </section>
+
+    <!-- ALERTA DE EMERGÊNCIA -->
+    <div id="emergencyBanner" class="civil-defense-alert" role="alert">
+      <div class="alert-message-box">
+        <span class="alert-badge">Alerta vermelho</span>
+        <div class="alert-text-body">
+          <h3>Defesa Civil: risco iminente de alagamento</h3>
+          <p id="emergencyDetails">Ponto crítico em cota de transbordamento. Protocolo de contenção acionado.</p>
+        </div>
+      </div>
+      <span class="alert-badge" style="background:#991b1b;">SNS Dispatch ↗</span>
+    </div>
+
+    <!-- GRID PRINCIPAL -->
+    <main class="operations-grid">
+
+      <!-- COLUNA ESQUERDA -->
+      <div class="grid-column">
+
+        <!-- MAPA -->
+        <section class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <span class="panel-title">Mapa hidrográfico · São Paulo</span>
+              <span class="panel-description">Malha de drenagem urbana com 6 estações de monitoramento</span>
+            </div>
+            <span style="font-size:11px;color:var(--text-3);font-family:var(--mono);">6 estações ativas</span>
+          </div>
+
+          <div class="cartography-container">
+            <svg class="cartography-svg" viewBox="0 0 800 450" preserveAspectRatio="none">
+              <!-- Grade urbana -->
+              <path class="urban-grid" d="M 0 50 L 800 50 M 0 150 L 800 150 M 0 250 L 800 250 M 0 350 L 800 350"/>
+              <path class="urban-grid" d="M 100 0 L 100 450 M 300 0 L 300 450 M 500 0 L 500 450 M 700 0 L 700 450"/>
+              <path class="corridor-road" d="M 380 20 L 415 430"/>
+              <path class="corridor-road" d="M 100 210 L 760 190"/>
+
+              <!-- Rios -->
+              <path class="river-main" d="M 0 100 Q 250 80 500 110 T 800 95"/>
+              <text x="28" y="88" fill="#3b82f6" font-size="10" font-family="'JetBrains Mono', monospace" font-weight="600">CALHA RIO TIETÊ</text>
+              <path class="river-secondary" d="M 150 95 Q 160 250 110 440"/>
+              <text x="118" y="320" fill="#60a5fa" font-size="9" font-family="'JetBrains Mono', monospace" transform="rotate(75, 118, 320)">RIO PINHEIROS</text>
+              <path class="river-secondary" d="M 430 110 Q 450 210 520 430"/>
+              <text x="462" y="310" fill="#60a5fa" font-size="9" font-family="'JetBrains Mono', monospace">TAMANDUATEÍ</text>
+
+              <!-- Marcador 01: Anhangabaú -->
+              <g id="marker-bueiro-01" class="sensor-pin" transform="translate(385,205)">
+                <circle class="pin-pulse" cx="0" cy="0" r="9" fill="none" stroke="#16a34a" stroke-width="1.5"/>
+                <circle class="core-circle" cx="0" cy="0" r="6" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+                <rect x="11" y="-10" width="96" height="24" rx="4" fill="rgba(255,255,255,0.9)" stroke="#e2e8f0"/>
+                <text x="16" y="1" fill="#0f172a" font-size="9.5" font-family="'Inter', sans-serif" font-weight="700">01 · Anhangabaú</text>
+                <text class="marker-text" x="16" y="11" fill="#475569" font-size="9" font-family="'JetBrains Mono', monospace">16%</text>
+              </g>
+
+              <!-- Marcador 02: 23 de Maio -->
+              <g id="marker-bueiro-02" class="sensor-pin" transform="translate(370,280)">
+                <circle class="pin-pulse" cx="0" cy="0" r="9" fill="none" stroke="#16a34a" stroke-width="1.5"/>
+                <circle class="core-circle" cx="0" cy="0" r="6" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+                <rect x="11" y="-10" width="94" height="24" rx="4" fill="rgba(255,255,255,0.9)" stroke="#e2e8f0"/>
+                <text x="16" y="1" fill="#0f172a" font-size="9.5" font-family="'Inter', sans-serif" font-weight="700">02 · 23 de Maio</text>
+                <text class="marker-text" x="16" y="11" fill="#475569" font-size="9" font-family="'JetBrains Mono', monospace">22%</text>
+              </g>
+
+              <!-- Marcador 03: Marginal Tietê -->
+              <g id="marker-bueiro-03" class="sensor-pin" transform="translate(340,105)">
+                <circle class="pin-pulse" cx="0" cy="0" r="9" fill="none" stroke="#16a34a" stroke-width="1.5"/>
+                <circle class="core-circle" cx="0" cy="0" r="6" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+                <rect x="11" y="-10" width="104" height="24" rx="4" fill="rgba(255,255,255,0.9)" stroke="#e2e8f0"/>
+                <text x="16" y="1" fill="#0f172a" font-size="9.5" font-family="'Inter', sans-serif" font-weight="700">03 · Marginal Tietê</text>
+                <text class="marker-text" x="16" y="11" fill="#475569" font-size="9" font-family="'JetBrains Mono', monospace">23%</text>
+              </g>
+
+              <!-- Marcador 04: Bixiga -->
+              <g id="marker-bueiro-04" class="sensor-pin" transform="translate(280,235)">
+                <circle class="pin-pulse" cx="0" cy="0" r="9" fill="none" stroke="#16a34a" stroke-width="1.5"/>
+                <circle class="core-circle" cx="0" cy="0" r="6" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+                <rect x="11" y="-10" width="72" height="24" rx="4" fill="rgba(255,255,255,0.9)" stroke="#e2e8f0"/>
+                <text x="16" y="1" fill="#0f172a" font-size="9.5" font-family="'Inter', sans-serif" font-weight="700">04 · Bixiga</text>
+                <text class="marker-text" x="16" y="11" fill="#475569" font-size="9" font-family="'JetBrains Mono', monospace">15%</text>
+              </g>
+
+              <!-- Marcador 05: Pompeia -->
+              <g id="marker-bueiro-05" class="sensor-pin" transform="translate(200,160)">
+                <circle class="pin-pulse" cx="0" cy="0" r="9" fill="none" stroke="#16a34a" stroke-width="1.5"/>
+                <circle class="core-circle" cx="0" cy="0" r="6" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+                <rect x="11" y="-10" width="80" height="24" rx="4" fill="rgba(255,255,255,0.9)" stroke="#e2e8f0"/>
+                <text x="16" y="1" fill="#0f172a" font-size="9.5" font-family="'Inter', sans-serif" font-weight="700">05 · Pompeia</text>
+                <text class="marker-text" x="16" y="11" fill="#475569" font-size="9" font-family="'JetBrains Mono', monospace">19%</text>
+              </g>
+
+              <!-- Marcador 06: Radial Leste -->
+              <g id="marker-bueiro-06" class="sensor-pin" transform="translate(590,200)">
+                <circle class="pin-pulse" cx="0" cy="0" r="9" fill="none" stroke="#16a34a" stroke-width="1.5"/>
+                <circle class="core-circle" cx="0" cy="0" r="6" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+                <rect x="11" y="-10" width="94" height="24" rx="4" fill="rgba(255,255,255,0.9)" stroke="#e2e8f0"/>
+                <text x="16" y="1" fill="#0f172a" font-size="9.5" font-family="'Inter', sans-serif" font-weight="700">06 · Radial Leste</text>
+                <text class="marker-text" x="16" y="11" fill="#475569" font-size="9" font-family="'JetBrains Mono', monospace">15%</text>
+              </g>
+            </svg>
+
+            <div class="carto-legend">
+              <div class="legend-chip"><span class="chip-circle" style="background:#16a34a;"></span>Normal (&lt;65%)</div>
+              <div class="legend-chip"><span class="chip-circle" style="background:#d97706;"></span>Atenção (65–84%)</div>
+              <div class="legend-chip"><span class="chip-circle" style="background:#dc2626;"></span>Crítico (≥85%)</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CORTE TÉCNICO -->
+        <section class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <span class="panel-title">Corte hidráulico · Galeria pluvial</span>
+              <span class="panel-description">Perfil da estação selecionada em tempo real</span>
+            </div>
+            <span id="selectedDrainBasin" style="font-size:11px;color:var(--text-3);font-family:var(--mono);">Bacia do Tamanduateí · bueiro-01</span>
+          </div>
+
+          <div class="engineering-cutaway">
+            <div class="cutaway-viewport">
+              <div class="pavement-layer">
+                <div class="street-grate" title="Grelha de captação pluvial"></div>
+              </div>
+              <div class="sensor-chassis-top" title="Sensor HC-SR04">
+                <div class="transducer"></div>
+                <div class="transducer"></div>
+              </div>
+              <div class="depth-gauge-ruler">
+                <span>0cm</span><span>50</span><span>100</span><span>150</span><span>200</span>
+              </div>
+              <div class="culvert-outflow" title="Saída de escoamento"></div>
+              <div id="waterContainer" class="water-column">
+                <div class="water-crest"></div>
+              </div>
+            </div>
+
+            <div>
+              <div style="margin-bottom:14px;">
+                <h3 id="selectedDrainName" style="font-size:16px;font-weight:700;color:var(--text-1);letter-spacing:-0.02em;">Vale do Anhangabaú</h3>
+                <span style="font-size:11px;color:var(--text-3);">Cota máxima: 200 cm · Sensor HC-SR04</span>
+              </div>
+              <div class="telemetry-metrics-grid">
+                <div class="metric-box">
+                  <span class="metric-box-title">Ocupação</span>
+                  <span id="cutawayWaterLevel" class="metric-box-val" style="color:#2563eb;">16.0%</span>
+                </div>
+                <div class="metric-box">
+                  <span class="metric-box-title">Dist. acústica</span>
+                  <span id="cutawayDistance" class="metric-box-val">168 cm</span>
+                </div>
+                <div class="metric-box">
+                  <span class="metric-box-title">Gradiente</span>
+                  <span id="cutawayRate" class="metric-box-val">+0.2 cm/min</span>
+                </div>
+                <div class="metric-box">
+                  <span class="metric-box-title">Status</span>
+                  <span id="cutawayStatus" class="metric-box-val" style="font-size:14px;color:#16a34a;">NORMAL</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- COLUNA DIREITA -->
+      <div class="grid-column">
+
+        <!-- REDE DE BUEIROS -->
+        <section class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <span class="panel-title">Rede de bueiros inteligentes</span>
+              <span class="panel-description">Estado consolidado por ponto de captação</span>
+            </div>
+            <span style="font-size:11px;color:var(--text-3);">Clique para selecionar</span>
+          </div>
+          <div id="fleetCardsContainer" class="fleet-grid-list"></div>
+        </section>
+
+        <!-- LOG DE OCORRÊNCIAS -->
+        <section class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <span class="panel-title">Registro de ocorrências</span>
+              <span class="panel-description">Despachos AWS SNS e alertas automáticos</span>
+            </div>
+            <span style="font-size:10px;color:var(--text-3);font-family:var(--mono);">Log de auditoria</span>
+          </div>
+          <div style="max-height:220px;overflow-y:auto;">
+            <table class="event-audit-table">
+              <thead>
+                <tr>
+                  <th>Horário</th>
+                  <th>Localidade</th>
+                  <th>Nível</th>
+                  <th>Protocolo</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody">
+                <tr>
+                  <td style="font-family:var(--mono);">--:--:--</td>
+                  <td>Aguardando eventos</td>
+                  <td>—</td>
+                  <td><span class="status-tag normal">Em espera</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TERMINAL MQTT -->
+        <section class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title-wrap">
+              <span class="panel-title">Fila MQTT · Telemetria de borda</span>
+              <span class="panel-description">Tópico: cidades_inteligentes/enchentes/&lt;id&gt;</span>
+            </div>
+            <span style="font-size:10px;color:var(--text-3);font-family:var(--mono);">QoS 1 · Porta 1883</span>
+          </div>
+          <div class="mqtt-terminal" id="terminalBody">
+            <div style="color:#475569;">[SISTEMA] Conexão com barramento de telemetria estabelecida.</div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- MODAL DOCUMENTAÇÃO TÉCNICA -->
+  <div id="codeModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content-card">
+
+      <div class="modal-head">
+        <div>
+          <h2 id="modalTitle">Especificação técnica da arquitetura</h2>
+          <p>Documentação de engenharia para apresentação acadêmica e implantação municipal</p>
+        </div>
+        <button id="closeModalBtn" class="btn btn-secondary" style="padding:5px 10px;" aria-label="Fechar">✕</button>
+      </div>
+
+      <div class="modal-tab-bar">
+        <button class="tab-pill active" data-tab="tab-arch">Arquitetura</button>
+        <button class="tab-pill" data-tab="tab-esp32">Firmware ESP32 (C++)</button>
+        <button class="tab-pill" data-tab="tab-nodered">Gateway Node-RED</button>
+        <button class="tab-pill" data-tab="tab-aws">Lambda &amp; DynamoDB</button>
+      </div>
+
+      <div class="modal-scroll-area">
+
+        <!-- ABA: ARQUITETURA -->
+        <div id="tab-arch" class="tab-panel">
+          <div class="arch-card-grid">
+            <div class="arch-card" style="border-left:3px solid #16a34a;">
+              <h4>1. Camada de borda (Edge)</h4>
+              <p>Sensor HC-SR04 mede lâmina d'água sem contato. ESP32 (ou gêmeo digital Python) processa médias e transmite via MQTT leve a cada 5 segundos.</p>
+            </div>
+            <div class="arch-card" style="border-left:3px solid #2563eb;">
+              <h4>2. Gateway local (Node-RED)</h4>
+              <p>Autonomia offline garantida. Armazena leituras em contingência, aciona sirenes locais e reenvia para a nuvem quando a conectividade é restaurada.</p>
+            </div>
+            <div class="arch-card" style="border-left:3px solid #7c3aed;">
+              <h4>3. Nuvem AWS (sa-east-1)</h4>
+              <p>IoT Core com TLS, Lambda sem servidor ocioso, DynamoDB para séries temporais e SNS para broadcast de emergência à Defesa Civil.</p>
+            </div>
+          </div>
+          <div class="code-box">
+            <pre><code>Fluxo de dados:
+  ESP32/Simulador → [MQTT broker] → Node-RED → AWS IoT Core
+                                             ↓
+                                     Lambda (processamento)
+                                             ↓
+                              DynamoDB ← registro | SNS → alerta SMS/e-mail</code></pre>
+          </div>
+        </div>
+
+        <!-- ABA: ESP32 -->
+        <div id="tab-esp32" class="tab-panel" style="display:none;">
+          <div class="code-box">
+            <button class="copy-button">Copiar</button>
+            <pre><code>#include &lt;WiFi.h&gt;
+#include &lt;PubSubClient.h&gt;
+#include &lt;ArduinoJson.h&gt;
+
+const char* ssid        = "WIFI_MUNICIPAL";
+const char* password    = "SENHA";
+const char* mqtt_server = "192.168.1.100";
+
+const int TRIG_PIN = 5;
+const int ECHO_PIN = 18;
+
+WiFiClient   espClient;
+PubSubClient client(espClient);
+
+float medirDistancia() {
+  digitalWrite(TRIG_PIN, LOW);  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH); delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+  long dur = pulseIn(ECHO_PIN, HIGH);
+  float d = dur * 0.0343 / 2.0;
+  return (d &gt; 0 &amp;&amp; d &lt; 400) ? d : -1;
+}
+
+void loop() {
+  if (!client.connected()) reconnect();
+  client.loop();
+
+  float nivel = medirDistancia();
+  if (nivel != -1) {
+    StaticJsonDocument&lt;200&gt; doc;
+    doc["sensor_id"]   = "bueiro_01";
+    doc["distancia_cm"] = nivel;
+    doc["timestamp"]   = millis();
+
+    char buf[256];
+    serializeJson(doc, buf);
+    client.publish("cidades_inteligentes/enchentes/bueiro_01", buf);
+  }
+  delay(5000);
+}</code></pre>
+          </div>
+        </div>
+
+        <!-- ABA: NODE-RED -->
+        <div id="tab-nodered" class="tab-panel" style="display:none;">
+          <div class="code-box">
+            <pre><code>// Fluxo completo exportável em edge/nodered_flow.json
+// Contém: simulador Digital Twin, dashboard visual,
+// alerta automático por nível e integração AWS IoT Core.
+//
+// Para importar: Node-RED → Menu (≡) → Import → Cole o JSON</code></pre>
+          </div>
+        </div>
+
+        <!-- ABA: AWS -->
+        <div id="tab-aws" class="tab-panel" style="display:none;">
+          <div class="code-box">
+            <button class="copy-button">Copiar</button>
+            <pre><code># Função AWS Lambda — Processador Hidrológico
+import boto3, os, time
+from decimal import Decimal
+
+dynamodb = boto3.resource('dynamodb')
+sns      = boto3.client('sns')
+
+def lambda_handler(event, context):
+    sensor_id   = event.get('sensor_id', 'bueiro_01')
+    distancia   = float(event.get('distancia_cm', 200.0))
+    epoch_now   = int(time.time())
+
+    nivel_cm    = max(0.0, min(200.0, 200.0 - distancia))
+    nivel_pct   = round((nivel_cm / 200.0) * 100.0, 1)
+    status      = 'CRITICO' if nivel_pct &gt;= 80 else 'NORMAL'
+
+    dynamodb.Table('FloodSensorReadings').put_item(Item={
+        'sensor_id'    : sensor_id,
+        'timestamp'    : epoch_now,
+        'distancia_cm' : Decimal(str(distancia)),
+        'nivel_pct'    : Decimal(str(nivel_pct)),
+        'status'       : status
+    })
+
+    if nivel_pct &gt;= 80:
+        sns.publish(
+            TopicArn=os.environ['SNS_TOPIC_ARN'],
+            Subject =f"ALERTA DEFESA CIVIL: {sensor_id}",
+            Message =f"Cota de transbordamento: {nivel_pct}%"
+        )
+
+    return {'statusCode': 200, 'nivel_pct': nivel_pct}</code></pre>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

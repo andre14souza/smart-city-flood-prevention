@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Infraestrutura Serverless AWS para Cidades Inteligentes - Compatível com AWS Academy / Vocareum (usa LabRole pré-existente)'
+
+Parameters:
+  EmergencyAlertEmail:
+    Type: String
+    Default: 'defesacivil.alerta@exemplo.com'
+    Description: 'Email para receber notificações imediatas de risco de alagamento'
+
+Resources:
+
+  # 1. Tabela Amazon DynamoDB
+  FloodDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: FloodSensorReadings
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: sensor_id
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: N
+      KeySchema:
+        - AttributeName: sensor_id
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+
+  # 2. Tópico Amazon SNS para Alertas de Emergência
+  FloodAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: DefesaCivilAlerts
+      DisplayName: 'Alertas Municipais de Alagamento'
+
+  # Assinatura de Email para o SNS
+  EmailAlertSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref FloodAlertsTopic
+      Protocol: email
+      Endpoint: !Ref EmergencyAlertEmail
+
+  # 3. Função AWS Lambda (Utiliza a 'LabRole' pré-existente da AWS Academy)
+  FloodProcessorFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: flood_processor_lambda
+      Runtime: python3.11
+      Handler: index.lambda_handler
+      Role: !Sub 'arn:aws:iam::${AWS::AccountId}:role/LabRole'
+      Timeout: 10
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref FloodDynamoDBTable
+          SNS_TOPIC_ARN: !Ref FloodAlertsTopic
+      Code:
+        ZipFile: |
+          import json, os, time, boto3
+          from decimal import Decimal
+
+          dynamodb = boto3.resource('dynamodb')
+          sns = boto3.client('sns')
+          TABLE_NAME = os.environ.get('TABLE_NAME', 'FloodSensorReadings')
+          SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN')
+          TOTAL_DEPTH_CM = 200.0
+
+          def lambda_handler(event, context):
+              sensor_id = event.get('sensor_id', 'bueiro_01')
+              distancia_cm = float(event.get('distancia_cm', 200.0))
+              epoch_now = int(time.time())
+
+              nivel_agua_cm = max(0.0, min(TOTAL_DEPTH_CM, TOTAL_DEPTH_CM - distancia_cm))
+              nivel_agua_pct = round((nivel_agua_cm / TOTAL_DEPTH_CM) * 100.0, 1)
+
+              status = "NORMAL"
+              if nivel_agua_pct >= 80.0 or distancia_cm <= 40.0:
+                  status = "CRITICO"
+              elif nivel_agua_pct >= 50.0:
+                  status = "ATENCAO"
+
+              table = dynamodb.Table(TABLE_NAME)
+              table.put_item(Item={
+                  'sensor_id': sensor_id,
+                  'timestamp': epoch_now,
+                  'distancia_cm': Decimal(str(round(distancia_cm, 1))),
+                  'nivel_agua_cm': Decimal(str(round(nivel_agua_cm, 1))),
+                  'nivel_agua_pct': Decimal(str(nivel_agua_pct)),
+                  'status': status
+              })
+
+              if status == "CRITICO":
+                  try:
+                      sns.publish(
+                          TopicArn=SNS_TOPIC_ARN,
+                          Subject=f"ALERTA DEFESA CIVIL: Risco em {sensor_id}",
+                          Message=f"Bueiro {sensor_id} com {nivel_agua_pct}% de lamina d'agua ({nivel_agua_cm} cm). Evacuar ponto critico."
+                      )
+                  except Exception as e:
+                      print(f"Erro ao publicar SNS: {str(e)}")
+
+              return {'statusCode': 200, 'sensor_id': sensor_id, 'status': status}
+
+  # Permissão para o IoT Core invocar o Lambda
+  LambdaPermissionForIoTCore:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref FloodProcessorFunction
+      Action: lambda:InvokeFunction
+      Principal: iot.amazonaws.com
+
+  # 4. Regra no AWS IoT Core
+  IoTCoreTopicRule:
+    Type: AWS::IoT::TopicRule
+    Properties:
+      RuleName: FloodDrainIngestionRule
+      TopicRulePayload:
+        RuleDisabled: false
+        Sql: "SELECT sensor_id, distancia_cm, timestamp FROM 'cidades_inteligentes/enchentes/+' WHERE distancia_cm > 0.0"
+        Actions:
+          - Lambda:
+              FunctionArn: !GetAtt FloodProcessorFunction.Arn
+
+Outputs:
+  DynamoDBTableName:
+    Value: !Ref FloodDynamoDBTable
+    Description: Nome da tabela DynamoDB
+  SNSTopicArn:
+    Value: !Ref FloodAlertsTopic
+    Description: ARN do tópico SNS
+  LambdaFunctionArn:
+    Value: !GetAtt FloodProcessorFunction.Arn
+    Description: ARN da função Lambda
