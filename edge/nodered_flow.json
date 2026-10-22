@@ -4,12 +4,12 @@
     "type": "tab",
     "label": "Bueiro Inteligente - Cidades Inteligentes",
     "disabled": false,
-    "info": "Fluxo corrigido: botões com resposta instantânea usando variáveis globais de fluxo."
+    "info": "Fluxo com ETA de transbordamento preditivo e atuador de bomba de alivio Edge."
   },
   {
     "id": "ui_tab_flood",
     "type": "ui_tab",
-    "name": "Prevenção de Enchentes",
+    "name": "Prevencao de Enchentes",
     "icon": "dashboard",
     "order": 1,
     "disabled": false,
@@ -28,7 +28,7 @@
   {
     "id": "ui_group_sim_controls",
     "type": "ui_group",
-    "name": "Simulador Climático (Digital Twin)",
+    "name": "Simulador Climatico (Digital Twin)",
     "tab": "ui_tab_flood",
     "order": 2,
     "disp": true,
@@ -39,7 +39,7 @@
     "id": "inject_auto_sim",
     "type": "inject",
     "z": "tab_smart_drains",
-    "name": "Ciclo Contínuo (a cada 2s)",
+    "name": "Ciclo Continuo (a cada 2s)",
     "props": [
       {
         "p": "payload"
@@ -65,7 +65,7 @@
     "type": "function",
     "z": "tab_smart_drains",
     "name": "Emulador de Sensor HC-SR04",
-    "func": "// Lê modo compartilhado do fluxo\nlet mode = flow.get('sim_mode') || 'normal';\nlet currentDist = flow.get('current_dist') || 175.0;\n\nif (mode === 'critical') {\n    // Na enxurrada crítica, a água sobe mais e a distância diminui até 15-25cm\n    currentDist = Math.max(15.0, currentDist - 4.0 + (Math.random() * 2 - 1));\n} else {\n    // No tempo seco, a distância fica entre 165cm e 185cm (nível baixo de água)\n    currentDist = Math.min(180.0, currentDist + 5.0 + (Math.random() * 2 - 1));\n}\n\nflow.set('current_dist', currentDist);\n\nmsg.payload = {\n    sensor_id: 'bueiro_01',\n    distancia_cm: parseFloat(currentDist.toFixed(1)),\n    timestamp: Date.now()\n};\n\nreturn msg;",
+    "func": "let mode = flow.get(\"sim_mode\") || \"normal\";\nlet currentDist = flow.get(\"current_dist\") || 175.0;\n// Bomba ativa: alivia +2.5cm por ciclo no nivel da agua\nlet pumpActive = flow.get(\"pump_active\") || false;\nlet pumpRelief = pumpActive ? 2.5 : 0;\nif (mode === \"critical\") {\n    currentDist = Math.max(15.0, currentDist - 4.0 + (Math.random() * 2 - 1) + pumpRelief);\n} else {\n    currentDist = Math.min(180.0, currentDist + 5.0 + (Math.random() * 2 - 1) + pumpRelief);\n}\nflow.set(\"current_dist\", currentDist);\nmsg.payload = { sensor_id: \"bueiro_01\", distancia_cm: parseFloat(currentDist.toFixed(1)), timestamp: Date.now() };\nreturn msg;",
     "outputs": 1,
     "noerr": 0,
     "initialize": "",
@@ -83,14 +83,14 @@
     "id": "ui_btn_normal",
     "type": "ui_button",
     "z": "tab_smart_drains",
-    "name": "Botão Normal",
+    "name": "Botao Normal",
     "group": "ui_group_sim_controls",
     "order": 1,
     "width": "4",
     "height": "2",
     "passthru": false,
-    "label": "☀️ TEMPO SECO (NORMAL)",
-    "tooltip": "Simula nível de água baixo",
+    "label": "TEMPO SECO (NORMAL)",
+    "tooltip": "Simula nivel de agua baixo",
     "color": "#ffffff",
     "bgcolor": "#10b981",
     "className": "",
@@ -111,13 +111,13 @@
     "id": "ui_btn_flood",
     "type": "ui_button",
     "z": "tab_smart_drains",
-    "name": "Botão Crítico",
+    "name": "Botao Critico",
     "group": "ui_group_sim_controls",
     "order": 2,
     "width": "4",
     "height": "2",
     "passthru": false,
-    "label": "🚨 ENXURRADA CRÍTICA (85%+)",
+    "label": "ENXURRADA CRITICA (85%+)",
     "tooltip": "Dispara transbordamento imediato",
     "color": "#ffffff",
     "bgcolor": "#ef4444",
@@ -136,11 +136,39 @@
     ]
   },
   {
+    "id": "ui_btn_toggle_pump",
+    "type": "ui_button",
+    "z": "tab_smart_drains",
+    "name": "Botao Bomba Manual",
+    "group": "ui_group_sim_controls",
+    "order": 3,
+    "width": "8",
+    "height": "2",
+    "passthru": false,
+    "label": "ALTERNAR BOMBA DE ALIVIO (MANUAL)",
+    "tooltip": "Liga ou desliga a bomba manualmente",
+    "color": "#ffffff",
+    "bgcolor": "#0284c7",
+    "className": "",
+    "icon": "",
+    "payload": "toggle_pump",
+    "payloadType": "str",
+    "topic": "",
+    "topicType": "str",
+    "x": 165,
+    "y": 370,
+    "wires": [
+      [
+        "func_toggle_pump_manual"
+      ]
+    ]
+  },
+  {
     "id": "func_trigger_normal",
     "type": "function",
     "z": "tab_smart_drains",
     "name": "Aplicar Imediato: Normal",
-    "func": "flow.set('sim_mode', 'normal');\nflow.set('current_dist', 175.0);\n\nmsg.payload = {\n    sensor_id: 'bueiro_01',\n    distancia_cm: 175.0,\n    timestamp: Date.now()\n};\nreturn msg;",
+    "func": "flow.set(\"sim_mode\", \"normal\");\nflow.set(\"current_dist\", 175.0);\nmsg.payload = { sensor_id: \"bueiro_01\", distancia_cm: 175.0, timestamp: Date.now() };\nreturn msg;",
     "outputs": 1,
     "noerr": 0,
     "initialize": "",
@@ -158,8 +186,8 @@
     "id": "func_trigger_critical",
     "type": "function",
     "z": "tab_smart_drains",
-    "name": "Aplicar Imediato: Crítico",
-    "func": "flow.set('sim_mode', 'critical');\nflow.set('current_dist', 24.0);\n\nmsg.payload = {\n    sensor_id: 'bueiro_01',\n    distancia_cm: 24.0,\n    timestamp: Date.now()\n};\nreturn msg;",
+    "name": "Aplicar Imediato: Critico",
+    "func": "flow.set(\"sim_mode\", \"critical\");\nflow.set(\"current_dist\", 24.0);\nmsg.payload = { sensor_id: \"bueiro_01\", distancia_cm: 24.0, timestamp: Date.now() };\nreturn msg;",
     "outputs": 1,
     "noerr": 0,
     "initialize": "",
@@ -174,11 +202,30 @@
     ]
   },
   {
+    "id": "func_toggle_pump_manual",
+    "type": "function",
+    "z": "tab_smart_drains",
+    "name": "Comando Manual: Alternar Bomba",
+    "func": "let current = flow.get(\"pump_manual\") || false;\nlet next = !current;\nflow.set(\"pump_manual\", next);\nlet d = flow.get(\"current_dist\") || 175.0;\nlet lv = 200.0 - d;\nmsg.payload = {\n    sensor_id: \"bueiro_01\",\n    distancia_cm: d,\n    nivel_agua_cm: parseFloat(lv.toFixed(1)),\n    nivel_agua_pct: parseFloat(((lv / 200.0) * 100).toFixed(1)),\n    status: \"MANUAL\"\n};\nmsg.manual_override = next;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 460,
+    "y": 370,
+    "wires": [
+      [
+        "func_edge_actuator"
+      ]
+    ]
+  },
+  {
     "id": "func_process_distance",
     "type": "function",
     "z": "tab_smart_drains",
-    "name": "Cálculo Hidrológico (Nível e Status)",
-    "func": "const data = msg.payload;\nconst sensorDepth = 200.0;\nconst dist = typeof data.distancia_cm === 'number' ? data.distancia_cm : 200;\n\nlet waterLevelCm = sensorDepth - dist;\nif (waterLevelCm < 0) waterLevelCm = 0;\nif (waterLevelCm > sensorDepth) waterLevelCm = sensorDepth;\n\nlet waterLevelPct = parseFloat(((waterLevelCm / sensorDepth) * 100).toFixed(1));\n\nlet status = 'NORMAL';\nif (waterLevelPct >= 80) status = '🚨 CRÍTICO (TRANSBORDAMENTO)';\nelse if (waterLevelPct >= 50) status = '⚠️ ATENÇÃO (ELEVADO)';\nelse status = '🟢 NORMAL (SEGURO)';\n\nmsg.payload = {\n    sensor_id: data.sensor_id || 'bueiro_01',\n    distancia_cm: dist,\n    nivel_agua_cm: parseFloat(waterLevelCm.toFixed(1)),\n    nivel_agua_pct: waterLevelPct,\n    status: status\n};\n\nreturn [\n    { payload: waterLevelPct },\n    { payload: waterLevelPct, topic: 'Bueiro 01 (%)' },\n    { payload: status + ' [' + waterLevelPct + '% - ' + waterLevelCm.toFixed(1) + ' cm]' },\n    { payload: msg.payload }\n];",
+    "name": "Calculo Hidrologico (Nivel e Status)",
+    "func": "const data = msg.payload;\nconst sensorDepth = 200.0;\nconst dist = typeof data.distancia_cm === \"number\" ? data.distancia_cm : 200;\nlet waterLevelCm = sensorDepth - dist;\nif (waterLevelCm < 0) waterLevelCm = 0;\nif (waterLevelCm > sensorDepth) waterLevelCm = sensorDepth;\nlet waterLevelPct = parseFloat(((waterLevelCm / sensorDepth) * 100).toFixed(1));\nlet status = \"NORMAL\";\nif (waterLevelPct >= 80) status = \"CRITICO (TRANSBORDAMENTO)\";\nelse if (waterLevelPct >= 50) status = \"ATENCAO (ELEVADO)\";\nelse status = \"NORMAL (SEGURO)\";\nmsg.payload = {\n    sensor_id: data.sensor_id || \"bueiro_01\",\n    distancia_cm: dist,\n    nivel_agua_cm: parseFloat(waterLevelCm.toFixed(1)),\n    nivel_agua_pct: waterLevelPct,\n    status: status\n};\nreturn [\n    { payload: waterLevelPct },\n    { payload: waterLevelPct, topic: \"Bueiro 01 (%)\" },\n    { payload: status + \" [\" + waterLevelPct + \"% - \" + waterLevelCm.toFixed(1) + \" cm]\" },\n    { payload: msg.payload }\n];",
     "outputs": 4,
     "noerr": 0,
     "initialize": "",
@@ -196,20 +243,23 @@
       [
         "ui_text_status"
       ],
-      []
+      [
+        "func_prediction_eta",
+        "func_edge_actuator"
+      ]
     ]
   },
   {
     "id": "ui_gauge_water",
     "type": "ui_gauge",
     "z": "tab_smart_drains",
-    "name": "Nível de Água (%)",
+    "name": "Nivel de Agua (%)",
     "group": "ui_group_drain_01",
     "order": 1,
     "width": "8",
     "height": "4",
     "gtype": "gage",
-    "title": "Nível de Ocupação da Galeria",
+    "title": "Nivel de Ocupacao da Galeria",
     "label": "%",
     "format": "{{value}}%",
     "min": 0,
@@ -230,12 +280,12 @@
     "id": "ui_chart_history",
     "type": "ui_chart",
     "z": "tab_smart_drains",
-    "name": "Histórico em Tempo Real",
+    "name": "Historico em Tempo Real",
     "group": "ui_group_drain_01",
     "order": 2,
     "width": "8",
     "height": "4",
-    "label": "Evolução do Nível da Água",
+    "label": "Evolucao do Nivel da Agua",
     "chartType": "line",
     "legend": "false",
     "xformat": "HH:mm:ss",
@@ -271,13 +321,84 @@
     "order": 3,
     "width": "8",
     "height": "2",
-    "name": "Status do Alerta",
     "label": "Alerta Municipal:",
     "format": "{{msg.payload}}",
     "layout": "row-spread",
     "className": "",
     "x": 1090,
     "y": 200,
+    "wires": []
+  },
+  {
+    "id": "func_prediction_eta",
+    "type": "function",
+    "z": "tab_smart_drains",
+    "name": "NOVA: Predicao ETA — Tempo ate Transbordamento",
+    "func": "// =====================================================\n// FUNCAO 1: Predicao Hidrologica de ETA (Nova)\n// Calcula o tempo estimado ate a calha atingir cota\n// maxima, com base na taxa de subida atual (cm/min).\n// =====================================================\nconst data = msg.payload;\nconst SENSOR_DEPTH_CM = 200.0;\nconst CRITICAL_PCT = 80.0;\nlet levelCm = (typeof data.nivel_agua_cm === \"number\") ? data.nivel_agua_cm : 0;\nlet levelPct = (typeof data.nivel_agua_pct === \"number\") ? data.nivel_agua_pct : 0;\nlet prev = flow.get(\"eta_prev_reading\") || null;\nlet now = Date.now();\nlet etaText = \"Calha estavel — sem elevacao detectada\";\nif (prev !== null) {\n    let dtMin = (now - prev.time) / 60000.0;\n    if (dtMin > 0.01) {\n        let rate = (levelCm - prev.level) / dtMin;\n        if (rate > 0.3) {\n            let remaining = SENSOR_DEPTH_CM - levelCm;\n            let etaMin = parseFloat((remaining / rate).toFixed(1));\n            if (levelPct >= CRITICAL_PCT) {\n                etaText = \"TRANSBORDANDO AGORA — Protocolo de emergencia ativo!\";\n            } else if (etaMin <= 5) {\n                etaText = \"TRANSBORDO IMINENTE em ~\" + etaMin + \" min (+\" + rate.toFixed(1) + \" cm/min)\";\n            } else if (etaMin <= 15) {\n                etaText = \"Elevacao rapida — transbordo em ~\" + etaMin + \" min (+\" + rate.toFixed(1) + \" cm/min)\";\n            } else {\n                etaText = \"Subindo — transbordo em ~\" + etaMin + \" min (+\" + rate.toFixed(1) + \" cm/min)\";\n            }\n        } else if (rate < -0.3) {\n            etaText = \"Nivel em queda — escoamento ativo (\" + Math.abs(rate).toFixed(1) + \" cm/min)\";\n        }\n    }\n}\nflow.set(\"eta_prev_reading\", { level: levelCm, time: now });\nmsg.payload = etaText;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "flow.set(\"eta_prev_reading\", null);",
+    "finalize": "",
+    "libs": [],
+    "x": 860,
+    "y": 260,
+    "wires": [
+      [
+        "ui_text_eta"
+      ]
+    ]
+  },
+  {
+    "id": "ui_text_eta",
+    "type": "ui_text",
+    "z": "tab_smart_drains",
+    "name": "Previsao de Transbordo (ETA)",
+    "group": "ui_group_drain_01",
+    "order": 4,
+    "width": "8",
+    "height": "2",
+    "label": "ETA para Transbordo:",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "className": "",
+    "x": 1130,
+    "y": 260,
+    "wires": []
+  },
+  {
+    "id": "func_edge_actuator",
+    "type": "function",
+    "z": "tab_smart_drains",
+    "name": "NOVA: Atuador Edge — Bomba de Alivio",
+    "func": "// =====================================================\n// FUNCAO 2: Atuador Edge — Bomba de Alivio (Nova)\n// Aciona bomba automaticamente (nivel >= 80%) ou por\n// comando manual. Registra log circular de ativacoes.\n// =====================================================\nconst data = msg.payload;\nlet levelPct = (typeof data.nivel_agua_pct === \"number\") ? data.nivel_agua_pct : 0;\nlet manualOverride = (msg.manual_override !== undefined)\n    ? msg.manual_override\n    : (flow.get(\"pump_manual\") || false);\nif (msg.manual_override !== undefined) {\n    flow.set(\"pump_manual\", manualOverride);\n}\nlet autoPump = levelPct >= 80;\nlet pumpActive = manualOverride || autoPump;\nlet wasActive = flow.get(\"pump_active\") || false;\nflow.set(\"pump_active\", pumpActive);\nif (pumpActive && !wasActive) {\n    let reason = autoPump ? \"Automatico (nivel >= 80%)\" : \"Comando manual do operador\";\n    let log = flow.get(\"pump_log\") || [];\n    log.unshift({ time: new Date().toLocaleTimeString(\"pt-BR\"), reason: reason, level: levelPct });\n    if (log.length > 10) log.pop();\n    flow.set(\"pump_log\", log);\n    node.warn(\"[BOMBA] Acionada — \" + reason + \" | Nivel: \" + levelPct + \"%\");\n} else if (!pumpActive && wasActive) {\n    node.warn(\"[BOMBA] Desligada | Nivel: \" + levelPct + \"%\");\n}\nlet statusText;\nif (pumpActive) {\n    let mode = (manualOverride && !autoPump) ? \"Manual (150 L/s)\" : \"Auto-Contingencia Edge (120 L/s)\";\n    statusText = \"ATIVA — \" + mode + \" | Nivel: \" + levelPct + \"%\";\n} else {\n    statusText = \"Standby — Bomba desligada\";\n}\nmsg.payload = statusText;\nmsg.pumpActive = pumpActive;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "flow.set(\"pump_active\", false);\nflow.set(\"pump_manual\", false);\nflow.set(\"pump_log\", []);",
+    "finalize": "",
+    "libs": [],
+    "x": 860,
+    "y": 340,
+    "wires": [
+      [
+        "ui_text_pump"
+      ]
+    ]
+  },
+  {
+    "id": "ui_text_pump",
+    "type": "ui_text",
+    "z": "tab_smart_drains",
+    "name": "Status da Bomba de Alivio",
+    "group": "ui_group_drain_01",
+    "order": 5,
+    "width": "8",
+    "height": "2",
+    "label": "Atuador Local (Bomba de Succao):",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "className": "",
+    "x": 1130,
+    "y": 340,
     "wires": []
   }
 ]
