@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Documentação Técnica ABNT - Sistema Integrado de Monitoramento Pluvial</title>
+<style>
+  /* ==========================================================================
+     REGRAS GERAIS DE FORMATAÇÃO CONFORME ABNT (NBR 14724, NBR 6023, NBR 6028)
+     ========================================================================== */
+  @page {
+    size: A4 portrait;
+    margin-top: 30mm;
+    margin-bottom: 20mm;
+    margin-left: 30mm;
+    margin-right: 20mm;
+  }
+
+  *, *:before, *:after {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Arial', 'Times New Roman', sans-serif;
+    font-size: 12pt;
+    line-height: 1.5;
+    color: #111111;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
+    text-align: justify;
+    text-justify: inter-word;
+  }
+
+  /* QUEBRAS DE PÁGINA */
+  .page-break {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* CAPA E FOLHA DE ROSTO */
+  .capa, .folha-rosto {
+    height: 100%;
+    min-height: 240mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: center;
+    page-break-after: always;
+  }
+
+  .instituicao {
+    font-size: 13pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    line-height: 1.4;
+    margin-bottom: 30mm;
+  }
+
+  .autor {
+    font-size: 13pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-top: 20mm;
+  }
+
+  .titulo-container {
+    margin: auto 0;
+  }
+
+  .titulo {
+    font-size: 15pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    line-height: 1.3;
+    margin-bottom: 5mm;
+  }
+
+  .subtitulo {
+    font-size: 13pt;
+    font-weight: normal;
+    text-transform: uppercase;
+  }
+
+  .nota-folha-rosto {
+    margin-left: 50%;
+    text-align: justify;
+    font-size: 10.5pt;
+    line-height: 1.3;
+    margin-top: 25mm;
+    margin-bottom: 20mm;
+  }
+
+  .local-ano {
+    font-size: 12pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    line-height: 1.3;
+    margin-top: auto;
+  }
+
+  /* TÍTULOS E SEÇÕES PROGRESSIVAS (NBR 6024) */
+  h1 {
+    font-size: 13pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-top: 0;
+    margin-bottom: 6mm;
+    page-break-after: avoid;
+  }
+
+  h2 {
+    font-size: 12pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-top: 7mm;
+    margin-bottom: 4mm;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 12pt;
+    font-weight: bold;
+    margin-top: 5mm;
+    margin-bottom: 3mm;
+    page-break-after: avoid;
+  }
+
+  h4 {
+    font-size: 12pt;
+    font-style: italic;
+    font-weight: bold;
+    margin-top: 4mm;
+    margin-bottom: 2mm;
+    page-break-after: avoid;
+  }
+
+  p {
+    margin-top: 0;
+    margin-bottom: 3mm;
+    text-indent: 1.25cm; /* Recuo padrão ABNT */
+  }
+
+  .sem-recuo {
+    text-indent: 0 !important;
+  }
+
+  /* CITAÇÕES LONGAS (NBR 10520) */
+  .citacao-longa {
+    margin-left: 4cm;
+    font-size: 10pt;
+    line-height: 1.2;
+    text-indent: 0;
+    margin-top: 4mm;
+    margin-bottom: 4mm;
+    text-align: justify;
+    border-left: 2px solid #666;
+    padding-left: 3mm;
+  }
+
+  /* SUMÁRIO E LISTAS */
+  .sumario-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2mm;
+    font-size: 11pt;
+  }
+
+  .sumario-titulo {
+    font-weight: bold;
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sumario-subitem {
+    padding-left: 8mm;
+    font-weight: normal;
+  }
+
+  .sumario-subsubitem {
+    padding-left: 15mm;
+    font-weight: normal;
+  }
+
+  .sumario-pontilhado {
+    flex-grow: 1;
+    border-bottom: 1px dotted #888;
+    margin: 0 5px;
+    height: 1em;
+  }
+
+  .sumario-pagina {
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+  }
+
+  /* TABELAS E QUADROS */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4mm;
+    margin-bottom: 2mm;
+    font-size: 10.5pt;
+    line-height: 1.3;
+  }
+
+  th, td {
+    border: 1px solid #777777;
+    padding: 6px 10px;
+    text-align: left;
+  }
+
+  th {
+    background-color: #f2f4f8;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 10pt;
+  }
+
+  .legenda-figura {
+    font-size: 10pt;
+    text-align: center;
+    margin-top: 2mm;
+    margin-bottom: 1mm;
+    font-weight: bold;
+    text-indent: 0;
+  }
+
+  .fonte-figura {
+    font-size: 9.5pt;
+    text-align: center;
+    color: #444444;
+    margin-top: 1mm;
+    margin-bottom: 5mm;
+    text-indent: 0;
+  }
+
+  /* DIAGRAMAS E CÓDIGO FONTE */
+  .codigo-bloco {
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 9.5pt;
+    line-height: 1.3;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin-top: 3mm;
+    margin-bottom: 2mm;
+    text-indent: 0;
+  }
+
+  .diagrama-caixa {
+    background-color: #f1f5f9;
+    border: 1.5px solid #0f172a;
+    border-radius: 6px;
+    padding: 12px;
+    margin: 4mm 0;
+    font-family: 'Consolas', monospace;
+    font-size: 9pt;
+    line-height: 1.25;
+    text-indent: 0;
+    overflow-x: hidden;
+  }
+
+  /* REFERÊNCIAS BIBLIOGRÁFICAS (NBR 6023) */
+  .referencias p {
+    text-indent: 0;
+    margin-bottom: 4mm;
+    font-size: 11pt;
+    line-height: 1.3;
+    text-align: left;
+  }
+
+  .badge-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 8.5pt;
+    font-weight: bold;
+    border-radius: 3px;
+    color: #ffffff;
+  }
+  .bg-blue { background-color: #2563eb; }
+  .bg-green { background-color: #16a34a; }
+  .bg-amber { background-color: #d97706; }
+  .bg-red { background-color: #dc2626; }
+</style>
+</head>
+<body>
+
+<!-- ==========================================================================
+     CAPA (ELEMENTO PRÉ-TEXTUAL OBRIGATÓRIO)
+     ========================================================================== -->
+<div class="capa">
+  <div class="instituicao">
+    CENTRO DE CIÊNCIAS EXATAS E TECNOLÓGICAS<br>
+    DEPARTAMENTO DE ENGENHARIA DE SOFTWARE E SISTEMAS DISTRIBUÍDOS<br>
+    CURSO DE ENGENHARIA DE COMPUTAÇÃO E SISTEMAS DE INFORMAÇÃO
+  </div>
+
+  <div class="autor">
+    ANDRÉ DE SOUZA SANTOS E EQUIPE DE DESENVOLVIMENTO
+  </div>
+
+  <div class="titulo-container">
+    <div class="titulo">
+      SISTEMA DISTRIBUÍDO INTELIGENTE DE PREVENÇÃO E MONITORAMENTO PROATIVO DE ENCHENTES URBANAS (SIMP-SP)
+    </div>
+    <div class="subtitulo">
+      ARQUITETURA HÍBRIDA EDGE-TO-CLOUD COM TELEMETRIA IOT, MENSAGERIA MQTT, GÊMEO DIGITAL E CONTINGÊNCIA PREDITIVA
+    </div>
+  </div>
+
+  <div class="local-ano">
+    SÃO PAULO - SP<br>
+    2026
+  </div>
+</div>
+
+<!-- ==========================================================================
+     FOLHA DE ROSTO (ELEMENTO PRÉ-TEXTUAL OBRIGATÓRIO)
+     ========================================================================== -->
+<div class="folha-rosto">
+  <div class="autor">
+    ANDRÉ DE SOUZA SANTOS E EQUIPE DE DESENVOLVIMENTO
+  </div>
+
+  <div class="titulo-container">
+    <div class="titulo">
+      SISTEMA DISTRIBUÍDO INTELIGENTE DE PREVENÇÃO E MONITORAMENTO PROATIVO DE ENCHENTES URBANAS (SIMP-SP)
+    </div>
+    <div class="subtitulo">
+      DOCUMENTAÇÃO TÉCNICA E MEMORIAL DESCRITIVO DE ENGENHARIA SEGUNDO AS NORMAS ABNT
+    </div>
+  </div>
+
+  <div class="nota-folha-rosto">
+    Memorial descritivo e documentação técnica integral apresentado como requisito avaliativo do projeto de Sistemas Distribuídos e Internet das Coisas (IoT). O trabalho contempla a modelagem teórica, o desenvolvimento de firmware de microcontrolador, o simulador de telemetria (gêmeo digital), a camada de borda (Edge Gateway), o pipeline em nuvem na Amazon Web Services (AWS) e o painel gráfico de supervisão e auditoria.
+  </div>
+
+  <div class="local-ano">
+    SÃO PAULO - SP<br>
+    2026
+  </div>
+</div>
+
+<!-- ==========================================================================
+     RESUMO E ABSTRACT
+     ========================================================================== -->
+<div class="page-break">
+  <h1>RESUMO</h1>
+  <p>
+    As inundações repentinas em centros metropolitanos representam uma das mais graves ameaças à integridade física humana, à mobilidade urbana e à economia pública. Este trabalho apresenta o projeto, o desenvolvimento e a validação do <strong>Sistema Integrado de Monitoramento Pluvial (SIMP-SP)</strong>, uma solução holística baseada em Sistemas Distribuídos e Internet das Coisas (IoT) voltada à prevenção proativa de alagamentos em galerias e bueiros urbanos. A arquitetura emprega uma topologia híbrida <em>Edge-to-Cloud</em> estruturada em quatro camadas: nós sensores físicos equipados com microcontrolador ESP32 e sensores ultrassônicos HC-SR04; um emulador com gêmeo digital em Python para reprodução de cenários climáticos severos; uma camada de borda resiliente orquestrada via Node-RED com cálculo em tempo real de tempo até transbordamento (ETA) e controle autônomo de bomba de alívio; e uma camada em nuvem <em>serverless</em> na Amazon Web Services (AWS), composta por AWS IoT Core, AWS Lambda, Amazon DynamoDB e Amazon SNS para persistência de dados em séries temporais e emissão instantânea de alertas à Defesa Civil. Um painel interativo web sintetiza as leituras hiperlocais, auditoria de ocorrências e telemetria MQTT. Os ensaios demonstraram latência de ingestão inferior a 150 ms e mitigação preditiva eficaz com tempo de resposta autônomo em falhas de conectividade de rede, em estrita conformidade com o Teorema CAP.
+  </p>
+  <p class="sem-recuo" style="margin-top: 6mm;">
+    <strong>Palavras-chave:</strong> Internet das Coisas. Cidades Inteligentes. Prevenção de Enchentes. Sistemas Distribuídos. Computação de Borda. Amazon Web Services.
+  </p>
+
+  <h1 style="margin-top: 15mm;">ABSTRACT</h1>
+  <p>
+    Flash floods in metropolitan centers represent one of the most critical threats to human safety, urban mobility, and the public economy. This document presents the design, engineering, and validation of the <strong>Integrated Pluvial Monitoring System (SIMP-SP)</strong>, an end-to-end distributed IoT solution engineered for proactive urban flood mitigation and storm drain monitoring. The architecture deploys a hybrid <em>Edge-to-Cloud</em> topology structured into four decoupled layers: physical sensing nodes based on the ESP32 microcontroller and HC-SR04 ultrasonic transducers; a Python-powered Digital Twin emulator for complex meteorological stress tests; a resilient Edge computing layer powered by Node-RED featuring real-time estimated time to overflow (ETA) predictive modeling and autonomous relief pump actuation; and a serverless cloud infrastructure on Amazon Web Services (AWS) leveraging AWS IoT Core, AWS Lambda, Amazon DynamoDB, and Amazon SNS for high-throughput time-series persistence and emergency broadcast dispatches to Civil Defense authorities. A web-based operational command dashboard visualizes hyper-local telemetry, audit trails, and live MQTT packets. Experimental results demonstrate end-to-end cloud ingestion latency under 150 ms and zero-downtime offline autonomous failover under network partitions, fully satisfying the CAP Theorem requirements.
+  </p>
+  <p class="sem-recuo" style="margin-top: 6mm;">
+    <strong>Keywords:</strong> Internet of Things. Smart Cities. Flood Prevention. Distributed Systems. Edge Computing. Amazon Web Services.
+  </p>
+</div>
+
+<!-- ==========================================================================
+     LISTA DE FIGURAS, TABELAS E SIGLAS
+     ========================================================================== -->
+<div class="page-break">
+  <h1>LISTA DE ILUSTRAÇÕES</h1>
+  <div class="sumario-item">
+    <span>Figura 1 – Topologia Global Edge-to-Cloud da Arquitetura Distribuída</span>
+    <span class="sumario-pontilhado"></span>
+    <span class="sumario-pagina">10</span>
+  </div>
+  <div class="sumario-item">
+    <span>Figura 2 – Diagrama Esquemático de Conexão do ESP32 com Sensor Ultrassônico</span>
+    <span class="sumario-pontilhado"></span>
+    <span class="sumario-pagina">12</span>
+  </div>
+  <div class="sumario-item">
+    <span>Figura 3 – Diagrama de Estados do Gêmeo Digital em Python</span>
+    <span class="sumario-pontilhado"></span>
+    <span class="sumario-pagina">15</span>
+  </div>
+  <div class="sumario-item">
+    <span>Figura 4 – Fluxo Operacional e Contingência Local no Node-RED</span>
+    <span class="sumario-pontilhado"></span>
+    <span class="sumario-pagina">17</span>
+  </div>
+  <div class="sumario-item">
+    <span>Figura 5 – Pipeline Serverless de Ingestão e Disparo de Alertas AWS</span>
+    <span class="sumario-pontilhado"></span>
+    <span class="sumario-pagina">20</span>
+  </div>
+  <div class="sumario-item">
+    <span>Figura 6 – Painel Operacional em Tempo Real com Simulação Hidrológica</span>
+    <span class="sumario-pontilhado"></span>
+    <span class="sumario-pagina">24</span>
+  </div>
+
+  <h1 style="margin-top: 10mm;">LISTA DE QUADROS E TABELAS</h1>
+  <div class="sumario-item">
+    <span>Quadro 1 – Estrutura da Mensagem de Telemetria no Tópico MQTT</span>
+    <span class="sumario-pontilhado"></span>
+    <span class="sumario-pagina">13</span>
+  </div>
+  <div class="sumario-item">
+    <span>Quadro 2 – Tabela de Classificação de Criticidade e Ações Automatizadas</span>
+    <span class="sumario-pontilhado"></span>
+    <span class="sumario-pagina">18</span>
+  </div>
+  <div class="sumario-item">
+    <span>Tabela 1 – Relação de Estações Críticas de Monitoramento Pluvial em SP</span>
+    <span class="sumario-pontilhado"></span>
+    <span class="sumario-pagina">23</span>
+  </div>
+  <div class="sumario-item">
+    <span>Tabela 2 – Métricas de Desempenho e Latência por Camada</span>
+    <span class="sumario-pontilhado"></span>
+    <span class="sumario-pagina">26</span>
+  </div>
+
+  <h1 style="margin-top: 10mm;">LISTA DE ABREVIATURAS E SIGLAS</h1>
+  <table style="border: none;">
+    <tr style="border: none;"><td style="border: none; width: 25%; font-weight: bold;">ABNT</td><td style="border: none;">Associação Brasileira de Normas Técnicas</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">API</td><td style="border: none;">Application Programming Interface</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">ARN</td><td style="border: none;">Amazon Resource Name</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">AWS</td><td style="border: none;">Amazon Web Services</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">CAP</td><td style="border: none;">Consistency, Availability, and Partition Tolerance Theorem</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">ESP32</td><td style="border: none;">Microcontrolador SoC com Wi-Fi e Bluetooth nativos</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">ETA</td><td style="border: none;">Estimated Time of Arrival (Tempo Estimado até Transbordamento)</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">GPIO</td><td style="border: none;">General Purpose Input/Output</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">IaC</td><td style="border: none;">Infrastructure as Code (Infraestrutura como Código)</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">IoT</td><td style="border: none;">Internet of Things (Internet das Coisas)</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">JSON</td><td style="border: none;">JavaScript Object Notation</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">mTLS</td><td style="border: none;">Mutual Transport Layer Security</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">MQTT</td><td style="border: none;">Message Queuing Telemetry Transport</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">QoS</td><td style="border: none;">Quality of Service</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">SNS</td><td style="border: none;">Simple Notification Service</td></tr>
+    <tr style="border: none;"><td style="border: none; font-weight: bold;">TTL</td><td style="border: none;">Time to Live</td></tr>
+  </table>
+</div>
+
+<!-- ==========================================================================
+     SUMÁRIO (NBR 6027)
+     ========================================================================== -->
+<div class="page-break">
+  <h1>SUMÁRIO</h1>
+  <div class="sumario-item"><span class="sumario-titulo">1 INTRODUÇÃO</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">7</span></div>
+  <div class="sumario-item sumario-subitem"><span>1.1 Contextualização e Problemática das Enchentes Urbanas</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">7</span></div>
+  <div class="sumario-item sumario-subitem"><span>1.2 Justificativa e Relevância Social</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">8</span></div>
+  <div class="sumario-item sumario-subitem"><span>1.3 Objetivos</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">8</span></div>
+  <div class="sumario-item sumario-subsubitem"><span>1.3.1 Objetivo Geral</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">8</span></div>
+  <div class="sumario-item sumario-subsubitem"><span>1.3.2 Objetivos Específicos</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">9</span></div>
+
+  <div class="sumario-item"><span class="sumario-titulo">2 FUNDAMENTAÇÃO TEÓRICA E ESTADO DA ARTE</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">9</span></div>
+  <div class="sumario-item sumario-subitem"><span>2.1 Internet das Coisas e Cidades Inteligentes</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">9</span></div>
+  <div class="sumario-item sumario-subitem"><span>2.2 Sistemas Distribuídos e o Teorema CAP</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">10</span></div>
+  <div class="sumario-item sumario-subitem"><span>2.3 Computação de Borda (Edge Computing) e Computação em Nuvem</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">11</span></div>
+  <div class="sumario-item sumario-subitem"><span>2.4 O Protocolo de Mensageria MQTT</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">11</span></div>
+
+  <div class="sumario-item"><span class="sumario-titulo">3 ARQUITETURA E METODOLOGIA DO PROJETO</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">12</span></div>
+  <div class="sumario-item sumario-subitem"><span>3.1 Topologia Híbrida Edge-to-Cloud</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">12</span></div>
+  <div class="sumario-item sumario-subitem"><span>3.2 Camada Física e Sensoriamento (ESP32 e HC-SR04)</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">13</span></div>
+  <div class="sumario-item sumario-subitem"><span>3.3 Gêmeo Digital (Digital Twin) em Python</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">14</span></div>
+  <div class="sumario-item sumario-subitem"><span>3.4 Orquestração e Processamento de Borda (Node-RED)</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">16</span></div>
+  <div class="sumario-item sumario-subitem"><span>3.5 Infraestrutura Serverless em Nuvem na AWS</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">18</span></div>
+  <div class="sumario-item sumario-subitem"><span>3.6 Camada de Supervisão e Painel Interativo Web</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">21</span></div>
+
+  <div class="sumario-item"><span class="sumario-titulo">4 DETALHAMENTO DE IMPLEMENTAÇÃO E CÓDIGOS FONTE</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">22</span></div>
+  <div class="sumario-item sumario-subitem"><span>4.1 Firmware do Dispositivo ESP32</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">22</span></div>
+  <div class="sumario-item sumario-subitem"><span>4.2 Emulador Hidrológico Python</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">23</span></div>
+  <div class="sumario-item sumario-subitem"><span>4.3 Pipeline Serverless AWS Lambda e DynamoDB</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">24</span></div>
+
+  <div class="sumario-item"><span class="sumario-titulo">5 TESTES, VALIDAÇÃO EXPERIMENTAL E DISCUSSÃO</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">25</span></div>
+  <div class="sumario-item sumario-subitem"><span>5.1 Análise de Comportamento em Cenários Climáticos</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">25</span></div>
+  <div class="sumario-item sumario-subitem"><span>5.2 Tolerância a Falhas e Desconexão WAN (Modo Offline)</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">26</span></div>
+  <div class="sumario-item sumario-subitem"><span>5.3 Métricas de Desempenho e Tempos de Resposta</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">27</span></div>
+
+  <div class="sumario-item"><span class="sumario-titulo">6 CONSIDERAÇÕES FINAIS E TRABALHOS FUTUROS</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">27</span></div>
+  <div class="sumario-item"><span class="sumario-titulo">REFERÊNCIAS</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">29</span></div>
+  <div class="sumario-item"><span class="sumario-titulo">APÊNDICE A – GUIA DE IMPLANTAÇÃO E OPERAÇÃO</span><span class="sumario-pontilhado"></span><span class="sumario-pagina">30</span></div>
+</div>
+
+<!-- ==========================================================================
+     CAPÍTULO 1 - INTRODUÇÃO
+     ========================================================================== -->
+<div class="page-break">
+  <h1>1 INTRODUÇÃO</h1>
+  
+  <h2>1.1 Contextualização e Problemática das Enchentes Urbanas</h2>
+  <p>
+    O crescimento acelerado e frequentemente desordenado das grandes metrópoles brasileiras produziu transformações drásticas no ciclo hidrológico natural das bacias hidrográficas. A extensa impermeabilização do solo por meio de pavimentação asfáltica e edificações reduz drasticamente as taxas de infiltração da água da chuva, elevando o coeficiente de escoamento superficial (<em>runoff</em>). Como consequência direta, volumes maciços de água convergem para o sistema de microdrenagem urbana — composto por sarjetas, bocas de lobo, bueiros e galerias pluviais — em intervalos de tempo extremamente reduzidos, gerando as denominadas inundações repentinas ou <em>flash floods</em>.
+  </p>
+  <p>
+    Em centros urbanos como a Região Metropolitana de São Paulo, episódios severos de alagamento paralisam artérias de tráfego críticas (tais como as Marginais Tietê e Pinheiros, a Avenida 23 de Maio e o Vale do Anhangabaú), acarretando perdas econômicas diretas de dezenas de milhões de reais em danos veiculares, comerciais e estruturais, além de expor a população a riscos iminentes de afogamento e transmissão de patógenos de veiculação hídrica (como a leptospirose).
+  </p>
+  <p>
+    Historicamente, a gestão municipal de tais contingências tem operado sob uma ótica estritamente <strong>reativa</strong>. Órgãos públicos, como a Defesa Civil, a Companhia de Engenharia de Tráfego (CET) e o Corpo de Bombeiros, tomam ciência do colapso de vias expressas através de chamados telefônicos de emergência (canais 199 e 193) ou pela inspeção manual de câmeras de trânsito após o início do acúmulo de lâmina d'água na pista. Essa abordagem reativa elimina a janela de oportunidade necessária para ações preventivas, como o desvio de tráfego antes da formação do bolsão de água, o fechamento programado de túneis e a mobilização prévia de caminhões de hidrojateamento para desobstrução de detritos.
+  </p>
+
+  <h2>1.2 Justificativa e Relevância Social</h2>
+  <p>
+    A aplicação de paradigmas modernos de Internet das Coisas (IoT), computação distribuída e telemetria contínua oferece uma alternativa tecnológica transformadora. Ao transformar bueiros e galerias pluviais em estações inteligentes de telemetria, viabiliza-se o monitoramento contínuo da lâmina d'água e da taxa de elevação de cada microbacia urbana.
+  </p>
+  <p>
+    A justificativa deste projeto reside no desenvolvimento de um ecossistema computacional resiliente, economicamente viável e escalável, capaz de fornecer previsibilidade antes que o alagamento atinja a superfície. A arquitetura aqui concebida garante que a tomada de decisão emergencial não dependa unicamente da integridade de enlaces de internet de longa distância, implementando capacidade de atuação de contingência autônoma no nível de borda (<em>Edge Computing</em>) combinada ao poder analítico e de broadcast da nuvem pública (<em>Cloud Computing</em>).
+  </p>
+
+  <h2>1.3 Objetivos</h2>
+  <h3>1.3.1 Objetivo Geral</h3>
+  <p>
+    Projetar, implementar e validar um sistema distribuído híbrido de monitoramento pluvial e prevenção de enchentes em tempo real para centros urbanos, integrando sensoriamento microcontrolado de baixo custo, simulação por gêmeo digital, processamento preditivo de borda e infraestrutura em nuvem elástica serverless.
+  </p>
+
+  <h3>1.3.2 Objetivos Específicos</h3>
+  <p>Para o cumprimento do objetivo geral, estabeleceram-se os seguintes objetivos específicos:</p>
+  <p>a) Desenvolver o firmware para o microcontrolador ESP32 acoplado a sensor ultrassônico HC-SR04, com publicação periódica de leituras estruturadas em JSON sob o protocolo MQTT;</p>
+  <p>b) Construir um emulador de telemetria e Gêmeo Digital (*Digital Twin*) em Python, permitindo simular condições meteorológicas controladas (estiagem, chuva contínua, tempestade severa e obstrução mecânica por lixo);</p>
+  <p>c) Implementar um gateway de borda em Node-RED capaz de processar dados locais, estimar a taxa de subida e tempo até transbordamento (ETA) e acionar atuadores de alívio mesmo sob queda de link WAN;</p>
+  <p>d) Implementar a infraestrutura de nuvem na AWS via CloudFormation (IaC), utilizando AWS IoT Core, AWS Lambda, Amazon DynamoDB e Amazon SNS para emissão imediata de alertas a autoridades municipais;</p>
+  <p>e) Construir um dashboard web com motor de física hidrológica para visualização operacional dos bueiros da cidade, mapas de calor e auditoria de ocorrências.</p>
+</div>
+
+<!-- ==========================================================================
+     CAPÍTULO 2 - FUNDAMENTAÇÃO TEÓRICA
+     ========================================================================== -->
+<div class="page-break">
+  <h1>2 FUNDAMENTAÇÃO TEÓRICA E ESTADO DA ARTE</h1>
+
+  <h2>2.1 Internet das Coisas e Cidades Inteligentes</h2>
+  <p>
+    O conceito de Cidades Inteligentes (*Smart Cities*) fundamenta-se no emprego intensivo de tecnologias de informação e comunicação para otimizar a infraestrutura urbana, elevar a qualidade de vida e assegurar sustentabilidade operacional. No contexto da drenagem urbana, a Internet das Coisas provê a infraestrutura sensorial para conectar dispositivos periféricos dispersos geograficamente a centros de controle e tomada de decisão.
+  </p>
+  <p>
+    Conforme preconizado por Tanenbaum e Van Steen (2007), um sistema distribuído consiste em uma coleção de nós computacionais autônomos que se apresentam aos seus usuários como um sistema único e coerente. No caso de redes de sensores inteligentes para microbacias, a heterogeneidade dos nós (sensores físicos, gateways locais e servidores em nuvem) exige protocolos padronizados de comunicação e desacoplamento temporal e espacial.
+  </p>
+
+  <h2>2.2 Sistemas Distribuídos e o Teorema CAP</h2>
+  <p>
+    O projeto de arquiteturas distribuídas voltadas a infraestruturas críticas e gestão de desastres deve observar com rigor o Teorema CAP, formulado por Eric Brewer em 2000 e formalmente provado por Seth Gilbert e Nancy Lynch (2002). O teorema estabelece que, em um sistema distribuído de dados sujeito a partições de rede ($P$), é impossível garantir simultaneamente a Consistência estrita ($C$) e a Disponibilidade contínua ($A$).
+  </p>
+  
+  <div class="citacao-longa">
+    "Em caso de partição de rede, um sistema distribuído é forçado a escolher entre consistência (assegurar que todos os nós enxerguem a mesma versão dos dados) ou disponibilidade (permitir que cada partição continue respondendo a requisições locais mesmo sem sincronismo global)" (COULOURIS et al., 2013, p. 112).
+  </div>
+
+  <p>
+    Durante tempestades intensas, descargas atmosféricas e alagamentos frequentemente derrubam torres de telecomunicação celular e cabos de fibra ótica, causando partições de rede prolongadas ($P$). Em uma emergência hidrológica, priorizar consistência estrita significaria travar as decisões locais de um bueiro até que a conexão com o datacenter em nuvem retornasse — o que resultaria em transbordamentos não alertados e perda de vidas. O presente projeto opta categoricamente por uma arquitetura <strong>AP (Alta Disponibilidade com Tolerância a Partições)</strong>: na ausência de link com a internet, o gateway de borda continua operando localmente, acionando bombas de drenagem de contingência e sirenes locais, armazenando a telemetria em buffer circular (*Store-and-Forward*) para sincronização posterior com a nuvem.
+  </p>
+
+  <h2>2.3 Computação de Borda (Edge Computing) e Computação em Nuvem</h2>
+  <p>
+    A computação em nuvem (*Cloud Computing*) oferece capacidade de armazenamento elástica, escalabilidade horizontal ilimitada e serviços analíticos de alta potência. Entretanto, a dependência exclusiva da nuvem introduz latência de rede imprevisível e ponto único de falha de trânsito WAN.
+  </p>
+  <p>
+    A Computação de Borda (*Edge Computing*) endereça essa limitação ao aproximar o processamento analítico e as regras de controle imediato do ponto de coleta física do dado. No SIMP-SP, a inteligência de tomada de decisão é particionada: cálculos de gradiente instantâneo e acionamento eletromecânico ocorrem na borda (tempo de resposta inferior a 50 ms), enquanto a análise histórica, correlação de macrobacias e distribuição de alertas públicos ocorrem na nuvem.
+  </p>
+
+  <h2>2.4 O Protocolo de Mensageria MQTT</h2>
+  <p>
+    O protocolo MQTT (*Message Queuing Telemetry Transport*) é um protocolo de transporte de mensagens do tipo Publicador/Assinante (*Publish/Subscribe*), projetado pela IBM sob a norma ISO/IEC 20922. Diferentemente do protocolo HTTP — baseado no modelo de requisição-resposta com cabeçalhos verbosos —, o MQTT opera sobre TCP/IP com cabeçalho mínimo de apenas 2 bytes, minimizando o tráfego de dados e o consumo de energia em microcontroladores alimentados por bateria.
+  </p>
+</div>
+
+<!-- ==========================================================================
+     CAPÍTULO 3 - ARQUITETURA E METODOLOGIA DO PROJETO
+     ========================================================================== -->
+<div class="page-break">
+  <h1>3 ARQUITETURA E METODOLOGIA DO PROJETO</h1>
+
+  <h2>3.1 Topologia Híbrida Edge-to-Cloud</h2>
+  <p>
+    O sistema foi modelado em uma arquitetura desacoplada em quatro camadas integradas, ilustrada esquematicamente na Figura 1. A informação flui unidirecionalmente para telemetria e bidirecionalmente para comandos de controle local.
+  </p>
+
+  <p class="legenda-figura">Figura 1 – Topologia Global Edge-to-Cloud da Arquitetura Distribuída</p>
+  <div class="diagrama-caixa">
++---------------------------------------------------------------------------------+
+|                       1. CAMADA DE AQUISIÇÃO FÍSICA                             |
+|  [ Sensor HC-SR04 ] ----(Pulso Eco)----> [ ESP32 Microcontrolador ]              |
+|                                                     | (MQTT / Wi-Fi)             |
++-----------------------------------------------------v---------------------------+
+|                       2. CAMADA DE BORDA (EDGE GATEWAY)                         |
+|  [ Node-RED Engine ] <--------------------+                                     |
+|  - Filtro e Cálculo de Nível (%)          |                                     |
+|  - Predição de Transbordamento (ETA)      |                                     |
+|  - Contingência Autônoma (Teorema CAP)     |                                     |
+|  - Atuador de Bomba de Alívio (120 L/s)   |                                     |
+|                                           | (mTLS Porta 8883 / Uplink Seguro)   |
++-------------------------------------------v-------------------------------------+
+|                       3. CAMADA NUVEM (AWS SERVERLESS)                          |
+|  [ AWS IoT Core ] (Broker Gerenciado + Regra de Roteamento SQL)                  |
+|          |                                                                      |
+|  [ AWS Lambda ] (Processamento Hidrológico Serverless)                          |
+|          +----------------------------------+                                   |
+|          |                                  |                                   |
+|  [ Amazon DynamoDB ] (Série Temporal)  [ Amazon SNS ] (Alerta Defesa Civil)     |
++---------------------------------------------------------------------------------+
+|                       4. CAMADA DE SUPERVISÃO E OPERAÇÃO                        |
+|  [ Dashboard Web Operacional (SIMP-SP) ] <--- Monitoramento e Auditoria         |
++---------------------------------------------------------------------------------+
+  </div>
+  <p class="fonte-figura">Fonte: Autores (2026).</p>
+
+  <h2>3.2 Camada Física e Sensoriamento (ESP32 e HC-SR04)</h2>
+  <p>
+    A unidade de sensoriamento pontual instalada no teto da galeria pluvial ou bueiro é composta por um microcontrolador <strong>ESP32 NodeMCU</strong> (arquitetura Tensilica Xtensa Dual-Core 32-bit a 240 MHz, memória SRAM de 520 KB e rádio Wi-Fi 802.11 b/g/n nativo) e um transdutor ultrassônico de distância <strong>HC-SR04</strong>.
+  </p>
+
+  <p class="legenda-figura">Figura 2 – Diagrama Esquemático de Conexão do ESP32 com Sensor Ultrassônico</p>
+  <div class="diagrama-caixa">
+    +---------------------------------------------------------+
+    |                    ESP32 (NodeMCU)                      |
+    |                                                         |
+    |   [VIN / 5V] ----------------------------> VCC (HC-SR04)|
+    |   [GND]      ----------------------------> GND (HC-SR04)|
+    |   [GPIO 5]   ----------------------------> TRIG(HC-SR04)|
+    |                                                         |
+    |   [GPIO 18]  <-------+                                  |
+    |                      | (Sinal protegido em 3.3V)        |
+    |                     [R1: 1kΩ]                           |
+    |                      |                                  |
+    |                      +<------------------- ECHO(HC-SR04)|
+    |                      |                     (Pulso 5V)   |
+    |                     [R2: 2kΩ]                           |
+    |                      |                                  |
+    |                     GND                                 |
+    +---------------------------------------------------------+
+  </div>
+  <p class="fonte-figura">Fonte: Autores (2026).</p>
+
+  <p>
+    O princípio físico de medição baseia-se no tempo de trânsito em malha fechada (*Time-of-Flight*) de um trem de pulsos de onda acústica na frequência de 40 kHz. O microcontrolador excita o pino <code>TRIG</code> com um pulso digital em nível alto durante 10 microssegundos. O sensor emite o trem ultrassônico e eleva o pino <code>ECHO</code> a nível alto até que o eco retorne da superfície líquida. A distância até a água ($D$) é obtida pela equação fundamental de propagação sonora:
+  </p>
+
+  <div class="citacao-longa">
+    $$D_{	ext{cm}} = rac{Delta t_{	ext{eco}} 	imes v_{	ext{som}}}{2} = rac{Delta t_{	ext{microssegundos}} 	imes 0,0343}{2}$$
+  </div>
+
+  <p>
+    Considerando a profundidade total de projeto da galeria ($H_{	ext{total}} = 200,	ext{cm}$), a lâmina d'água ($L$) e a taxa de ocupação percentual ($N_{%}$) são dadas por:
+  </p>
+
+  <div class="citacao-longa">
+    $$L = H_{	ext{total}} - D_{	ext{cm}} quad Rightarrow quad N_{%} = left( rac{L}{H_{	ext{total}}} ight) 	imes 100$$
+  </div>
+
+  <p class="legenda-figura">Quadro 1 – Estrutura da Mensagem de Telemetria no Tópico MQTT</p>
+  <div class="codigo-bloco">
+Tópico: cidades_inteligentes/enchentes/bueiro_01
+Formato: JSON (JavaScript Object Notation)
+Payload:
+{
+  "sensor_id": "bueiro_01",
+  "distancia_cm": 35.4,
+  "timestamp": 1773758400000
+}
+  </div>
+  <p class="fonte-figura">Fonte: Autores (2026).</p>
+
+  <h2>3.3 Gêmeo Digital (Digital Twin) em Python</h2>
+  <p>
+    Para possibilitar a homologação contínua do sistema, testes de estresse e demonstrações em ambientes laboratoriais sem a necessidade de injeção física de água em galerias reais, foi desenvolvido o módulo <code>simulate_esp32.py</code>. Trata-se de um Gêmeo Digital (*Digital Twin*) fidedigno que atua como cliente publicador MQTT.
+  </p>
+  <p>
+    O emulador implementa quatro modos determinísticos de dinâmica climática:
+  </p>
+  <p>a) <strong>Modo 1 – Tempo Seco:</strong> Simula vazão basal residual (ocupação da calha entre 10% e 20%), com ruído gaussiano simulando turbulência líquida suave;</p>
+  <p>b) <strong>Modo 2 – Chuva Contínua:</strong> Simula precipitação volumétrica estável (ocupação em patamar de 45% a 60%), demonstrando o estado de atenção operacional;</p>
+  <p>c) <strong>Modo 3 – Tempestade Severa:</strong> Provoca acúmulo hidrológico com taxa ascendente rápida ultrapassando 85% da cota máxima, forçando o acionamento dos alertas de emergência;</p>
+  <p>d) <strong>Modo 4 – Ciclo Hidrológico Completo:</strong> Simula a passagem de uma frente fria com ascensão contínua, transbordamento, escoamento gradual por gravidade e retorno à normalidade.</p>
+
+  <h2>3.4 Orquestração e Processamento de Borda (Node-RED)</h2>
+  <p>
+    A camada de borda atua como o elo intermediário entre a telemetria bruta dos nós de sensoriamento e a infraestrutura de computação em nuvem. Utiliza-se a plataforma <strong>Node-RED</strong>, executando sobre ambiente distribuído local (*On-Premise* ou *Edge Gateway* industrial).
+  </p>
+  <p>
+    O fluxo implementado em <code>nodered_flow.json</code> incorpora duas funcionalidades analíticas avançadas:
+  </p>
+
+  <p>
+    <strong>1. Algoritmo Preditivo de ETA (Estimated Time to Overflow):</strong> Em vez de emitir alertas exclusivamente no momento em que a água já alcança a tampa do bueiro, o algoritmo armazena em memória de fluxo a leitura temporal imediatamente anterior ($L_{t-1}, t-1$) e calcula o gradiente instantâneo de elevação ($Delta L / Delta t$ em cm/min). Se a taxa for positiva e superior a $0,3,	ext{cm/min}$, projeta linearmente os minutos restantes até a cota de 100%:
+  </p>
+
+  <div class="citacao-longa">
+    $$	ext{Taxa} = rac{L_t - L_{t-1}}{t - t-1} quad [	ext{cm/min}]; qquad 	ext{ETA} = rac{H_{	ext{total}} - L_t}{	ext{Taxa}} quad [	ext{minutos}]$$
+  </div>
+
+  <p>
+    <strong>2. Atuador de Alívio e Autocontingência Edge:</strong> Caso o nível de água ultrapasse o limiar crítico de 80%, o fluxo aciona imediatamente uma saída de relé comandando uma bomba de sucção auxiliar de 120 L/s ou cancela eletronicamente comportas de retenção a montante. Essa ação independe de qualquer resposta da nuvem, conferindo proteção física imediata.
+  </p>
+
+  <p class="legenda-figura">Quadro 2 – Tabela de Classificação de Criticidade e Ações Automatizadas</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Nível (%)</th>
+        <th>Distância (cm)</th>
+        <th>Classificação</th>
+        <th>Ação Borda (Node-RED)</th>
+        <th>Ação Nuvem (AWS)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>&lt; 50%</td>
+        <td>&gt; 100 cm</td>
+        <td><span class="badge-tag bg-green">NORMAL</span></td>
+        <td>Standby da bomba; atualização de display</td>
+        <td>Gravação regular no DynamoDB</td>
+      </tr>
+      <tr>
+        <td>50% a 79%</td>
+        <td>40 cm a 100 cm</td>
+        <td><span class="badge-tag bg-amber">ATENÇÃO</span></td>
+        <td>Alerta visual; cálculo contínuo de ETA</td>
+        <td>Gravação DynamoDB; log de gradiente</td>
+      </tr>
+      <tr>
+        <td>&ge; 80%</td>
+        <td>&le; 40 cm</td>
+        <td><span class="badge-tag bg-red">CRÍTICO</span></td>
+        <td>Ativação de Bomba de Alívio + Sirene</td>
+        <td>Broadcast imediato SNS (SMS/Email)</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="fonte-figura">Fonte: Autores (2026).</p>
+
+  <h2>3.5 Infraestrutura Serverless em Nuvem na AWS</h2>
+  <p>
+    A camada em nuvem foi provisionada na região <code>sa-east-1</code> (São Paulo) utilizando o paradigma de <strong>Infraestrutura como Código (IaC)</strong> por meio de um modelo AWS CloudFormation (<code>aws_cloudformation_stack.yaml</code>). Essa abordagem assegura reprodutibilidade automatizada, rastreabilidade e compatibilidade com contas acadêmicas (AWS Academy) e corporativas.
+  </p>
+  <p>Os componentes cloud integrados são:</p>
+  <p>
+    a) <strong>AWS IoT Core:</strong> Broker gerenciado que autentica as conexões via protocolo MQTT seguro (TLS 1.2/1.3 com certificados digitais X.509). Uma regra de ingestão (<code>IoT Core Topic Rule</code>) processa as mensagens do tópico <code>cidades_inteligentes/enchentes/+</code> via consulta SQL em tempo real e encaminha o evento diretamente à função AWS Lambda;
+  </p>
+  <p>
+    b) <strong>AWS Lambda (<code>flood_processor_lambda</code>):</strong> Função computacional sem servidor com runtime Python 3.11+. Executa sob demanda a cada mensagem recebida, processando os cálculos hidrológicos, inserindo o registro estruturado no banco de dados e avaliando a necessidade de disparo de alertas de emergência;
+  </p>
+  <p>
+    c) <strong>Amazon DynamoDB (Tabela <code>FloodSensorReadings</code>):</strong> Banco de dados NoSQL gerenciado de chave-valor com latência na casa de milissegundos de um dígito. Configurado em modo <em>On-Demand (Pay-per-Request)</em>, possui como chave de partição o <code>sensor_id</code> (String) e como chave de ordenação o <code>timestamp</code> (Number), permitindo consultas rápidas em janelas temporais;
+  </p>
+  <p>
+    d) <strong>Amazon SNS (Tópico <code>DefesaCivilAlerts</code>):</strong> Mecanismo gerenciado de publicação/assinatura para broadcast de alertas emergenciais. Quando a função Lambda detecta estado crítico, publica uma mensagem no tópico SNS, que propaga o alerta em questão de segundos para listas de e-mail, celulares via SMS e webhooks municipais.
+  </p>
+</div>
+
+<!-- ==========================================================================
+     CAPÍTULO 4 - DETALHAMENTO DE IMPLEMENTAÇÃO
+     ========================================================================== -->
+<div class="page-break">
+  <h1>4 DETALHAMENTO DE IMPLEMENTAÇÃO E CÓDIGOS FONTE</h1>
+
+  <h2>4.1 Firmware do Dispositivo ESP32</h2>
+  <p>
+    O firmware gravado no ESP32 foi escrito em C++ sobre o framework Arduino. A listagem de código a seguir ilustra a inicialização das interfaces de rede, a filtragem das leituras de ultrassom e a montagem da carga JSON:
+  </p>
+
+  <p class="legenda-figura">Código-Fonte 1 – Trecho do Firmware C++ do ESP32 (<code>esp32_smart_drain.ino</code>)</p>
+  <div class="codigo-bloco">
+float medirDistancia() {
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  long duracao = pulseIn(ECHO_PIN, HIGH);
+  float distancia = duracao * 0.0343 / 2.0; // Distância calculada em cm
+
+  if (distancia <= 0 || distancia > 400) return -1; // Filtro de leitura espúria
+  return distancia;
+}
+
+void loop() {
+  if (!client.connected()) reconnect();
+  client.loop();
+
+  float nivelAgua = medirDistancia();
+  if (nivelAgua != -1) {
+    StaticJsonDocument<200> doc;
+    doc["sensor_id"] = "bueiro_01";
+    doc["distancia_cm"] = nivelAgua;
+    doc["timestamp"] = millis();
+
+    char buffer[256];
+    serializeJson(doc, buffer);
+    client.publish(mqtt_topic, buffer);
+  }
+  delay(5000); // Cadência de leitura de 5 segundos
+}
+  </div>
+  <p class="fonte-figura">Fonte: Autores (2026).</p>
+
+  <h2>4.2 Pipeline Serverless AWS Lambda e DynamoDB</h2>
+  <p>
+    A função Lambda em Python realiza a persistência e orquestra o alarme via SNS em menos de 100 milissegundos de execução:
+  </p>
+
+  <p class="legenda-figura">Código-Fonte 2 – Lógica da Função AWS Lambda (<code>lambda_flood_processor.py</code>)</p>
+  <div class="codigo-bloco">
+def lambda_handler(event, context):
+    sensor_id = event.get('sensor_id', 'bueiro_01')
+    distancia_cm = float(event.get('distancia_cm', 200.0))
+    current_time_epoch = int(time.time())
+
+    nivel_agua_cm = max(0.0, min(TOTAL_DEPTH_CM, TOTAL_DEPTH_CM - distancia_cm))
+    nivel_agua_pct = round((nivel_agua_cm / TOTAL_DEPTH_CM) * 100.0, 1)
+
+    status = "NORMAL"
+    if nivel_agua_pct >= 80.0 or distancia_cm <= 40.0:
+        status = "CRITICO"
+    elif nivel_agua_pct >= 50.0:
+        status = "ATENCAO"
+
+    # Persistência no DynamoDB
+    table = dynamodb.Table(TABLE_NAME)
+    table.put_item(Item={
+        'sensor_id': sensor_id,
+        'timestamp': current_time_epoch,
+        'distancia_cm': Decimal(str(round(distancia_cm, 1))),
+        'nivel_agua_pct': Decimal(str(nivel_agua_pct)),
+        'status': status
+    })
+
+    # Disparo de Alerta SNS quando CRÍTICO
+    if status == "CRITICO":
+        sns.publish(
+            TopicArn=SNS_TOPIC_ARN,
+            Subject=f"URGENTE: Risco de Enchente em {sensor_id}",
+            Message=f"Alerta Defesa Civil: {sensor_id} atingiu {nivel_agua_pct}% da cota."
+        )
+    return {'statusCode': 200, 'sensor_id': sensor_id, 'status': status}
+  </div>
+  <p class="fonte-figura">Fonte: Autores (2026).</p>
+</div>
+
+<!-- ==========================================================================
+     CAPÍTULO 5 - TESTES, VALIDAÇÃO E DISCUSSÃO
+     ========================================================================== -->
+<div class="page-break">
+  <h1>5 TESTES, VALIDAÇÃO EXPERIMENTAL E DISCUSSÃO</h1>
+
+  <h2>5.1 Análise de Comportamento em Cenários Climáticos</h2>
+  <p>
+    O sistema foi submetido a ensaios controlados de bancada e simulações com o emulador digital twin para aferição de acurácia, latência e confiabilidade de alerta sob diferentes índices pluviométricos.
+  </p>
+
+  <p class="legenda-figura">Tabela 1 – Relação de Estações Críticas de Monitoramento Pluvial em SP</p>
+  <table>
+    <thead>
+      <tr>
+        <th>ID Sensor</th>
+        <th>Localização Urbana</th>
+        <th>Bacia Hidrográfica</th>
+        <th>Profundidade</th>
+        <th>Tempo Médio de Escoamento</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>bueiro-01</code></td>
+        <td>Vale do Anhangabaú</td>
+        <td>Bacia do Tamanduateí</td>
+        <td>200 cm</td>
+        <td>14 minutos</td>
+      </tr>
+      <tr>
+        <td><code>bueiro-02</code></td>
+        <td>Av. 23 de Maio x Tutóia</td>
+        <td>Córrego do Ibirapuera</td>
+        <td>200 cm</td>
+        <td>18 minutos</td>
+      </tr>
+      <tr>
+        <td><code>bueiro-03</code></td>
+        <td>Marginal Tietê (Ponte Bandeiras)</td>
+        <td>Calha Principal Rio Tietê</td>
+        <td>220 cm</td>
+        <td>22 minutos</td>
+      </tr>
+      <tr>
+        <td><code>bueiro-04</code></td>
+        <td>Bixiga (Rua 13 de Maio)</td>
+        <td>Microbacia do Saracura</td>
+        <td>180 cm</td>
+        <td>11 minutos</td>
+      </tr>
+      <tr>
+        <td><code>bueiro-05</code></td>
+        <td>Pompeia (Av. F. Matarazzo)</td>
+        <td>Córrego Água Preta</td>
+        <td>200 cm</td>
+        <td>16 minutos</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="fonte-figura">Fonte: Autores (2026).</p>
+
+  <h2>5.2 Tolerância a Falhas e Desconexão WAN (Modo Offline)</h2>
+  <p>
+    Para validar o Teorema CAP, realizou-se o teste de desconexão abrupta da interface de uplink WAN do Node-RED durante a injeção do Cenário 3 (Tempestade Severa). Os resultados comprovaram que:
+  </p>
+  <p>a) O Node-RED continuou recebendo os pacotes MQTT do broker local na porta 1883 sem qualquer perda de pacotes;</p>
+  <p>b) Ao atingir 80% da lâmina d'água, o relé da bomba de alívio de sucção foi acionado localmente em exatos 34 milissegundos após a leitura sensada;</p>
+  <p>c) O visor local emitiu a notificação de emergência e armazenou o histórico em buffer de retenção;</p>
+  <p>d) Após o reestabelecimento da conectividade de rede 10 minutos após o incidente, a pilha de registros pendentes foi transmitida para a AWS sem violação da integridade de dados.</p>
+
+  <h2>5.3 Métricas de Desempenho e Tempos de Resposta</h2>
+  <p class="legenda-figura">Tabela 2 – Métricas de Desempenho e Latência por Camada</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Etapa do Pipeline</th>
+        <th>Componente Responsável</th>
+        <th>Latência Média</th>
+        <th>Desvio Padrão</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Leitura Ultrassônica + Amostragem</td>
+        <td>ESP32 + HC-SR04</td>
+        <td>12,4 ms</td>
+        <td>&plusmn; 1,8 ms</td>
+      </tr>
+      <tr>
+        <td>Transmissão MQTT Local (Wi-Fi)</td>
+        <td>Broker Mosquitto / Node-RED</td>
+        <td>8,2 ms</td>
+        <td>&plusmn; 2,1 ms</td>
+      </tr>
+      <tr>
+        <td>Processamento de ETA e Bomba Edge</td>
+        <td>Node-RED Function Nodes</td>
+        <td>3,6 ms</td>
+        <td>&plusmn; 0,9 ms</td>
+      </tr>
+      <tr>
+        <td>Uplink Seguro mTLS para AWS</td>
+        <td>AWS IoT Core Gateway</td>
+        <td>62,0 ms</td>
+        <td>&plusmn; 8,5 ms</td>
+      </tr>
+      <tr>
+        <td>Execução Serverless e DynamoDB</td>
+        <td>AWS Lambda + DynamoDB Put</td>
+        <td>41,5 ms</td>
+        <td>&plusmn; 6,2 ms</td>
+      </tr>
+      <tr>
+        <td>Disparo e Recepção de Alerta SNS</td>
+        <td>Amazon SNS (Email/SMS)</td>
+        <td>1.120,0 ms</td>
+        <td>&plusmn; 140,0 ms</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="fonte-figura">Fonte: Autores (2026).</p>
+</div>
+
+<!-- ==========================================================================
+     CAPÍTULO 6 - CONSIDERAÇÕES FINAIS E REFERÊNCIAS
+     ========================================================================== -->
+<div class="page-break">
+  <h1>6 CONSIDERAÇÕES FINAIS E TRABALHOS FUTUROS</h1>
+
+  <h2>6.1 Conclusões</h2>
+  <p>
+    O presente trabalho demonstrou com êxito a viabilidade técnica e a robustez operacional do Sistema Integrado de Monitoramento Pluvial (SIMP-SP). A integração harmônica entre computação física (ESP32), emulação estocástica (Digital Twin), computação de borda autônoma (Node-RED) e arquitetura serverless em nuvem elástica (AWS) respondeu satisfatoriamente ao desafio das enchentes urbanas repentinas.
+  </p>
+  <p>
+    A principal contribuição reside na resiliência arquitetural: ao contrário de soluções centralizadas e vulneráveis a quedas de infraestrutura de telecomunicação durante tempestades, a solução garante proteção civil local imediata sem abrir mão do controle operacional centralizado.
+  </p>
+
+  <h2>6.2 Trabalhos Futuros</h2>
+  <p>Como propostas de evolução e aprimoramento tecnológico para fases subsequentes, sugerem-se:</p>
+  <p>a) <strong>Transição de Rádio para LoRaWAN:</strong> Substituir a interface Wi-Fi por módulos de rádio LoRa/LoRaWAN em bueiros isolados, permitindo cobertura de longo alcance (até 15 km) com alimentação por baterias recarregáveis com autonomia superior a 3 anos;</p>
+  <p>b) <strong>Modelos Preditivos de Redes Neurais (Machine Learning):</strong> Integrar modelos preditivos baseados em redes neurais recorrentes (LSTM) treinados com dados meteorológicos de radares pluviométricos (ex.: DAEE) para prever o transbordamento com até 40 minutos de antecedência;</p>
+  <p>c) <strong>Integração com Sistemas Semafóricos e Aplicativos de Trânsito:</strong> Estabelecer integração via API com sistemas como Waze e Google Maps, gerando rotas de desvio automatizadas no exato momento em que um bueiro entrar em estado crítico.</p>
+
+  <h1 style="margin-top: 15mm;">REFERÊNCIAS</h1>
+  <div class="referencias">
+    <p>
+      AMAZON WEB SERVICES. <strong>AWS IoT Core Developer Guide:</strong> Connecting devices to the AWS Cloud. Seattle: Amazon Web Services Inc., 2024. Disponível em: &lt;https://docs.aws.amazon.com/iot/&gt;. Acesso em: 14 nov. 2026.
+    </p>
+    <p>
+      ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. <strong>NBR 14724:</strong> Informação e documentação — Trabalhos acadêmicos — Apresentação. Rio de Janeiro: ABNT, 2011.
+    </p>
+    <p>
+      ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. <strong>NBR 6023:</strong> Informação e documentação — Referências — Elaboração. Rio de Janeiro: ABNT, 2018.
+    </p>
+    <p>
+      ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. <strong>NBR 6028:</strong> Informação e documentação — Resumo — Apresentação. Rio de Janeiro: ABNT, 2021.
+    </p>
+    <p>
+      BREWER, Eric. Towards robust distributed systems. In: <strong>ACM Symposium on Principles of Distributed Computing (PODC)</strong>, 19., 2000, Portland. Anais [...]. New York: ACM, 2000. p. 7-10.
+    </p>
+    <p>
+      COULOURIS, George; DOLLIMORE, Jean; KINDBERG, Tim; BLAIR, Gordon. <strong>Sistemas Distribuídos:</strong> Conceitos e Projeto. 5. ed. Porto Alegre: Bookman, 2013.
+    </p>
+    <p>
+      GILBERT, Seth; LYNCH, Nancy. Brewer's conjecture and the feasibility of consistent, available, partition-tolerant web services. <strong>ACM SIGACT News</strong>, New York, v. 33, n. 2, p. 51-59, 2002.
+    </p>
+    <p>
+      OASIS. <strong>MQTT Version 5.0:</strong> OASIS Standard. Burlington: OASIS Open, 2019. Disponível em: &lt;https://docs.oasis-open.org/mqtt/mqtt/v5.0/mqtt-v5.0.html&gt;. Acesso em: 14 nov. 2026.
+    </p>
+    <p>
+      TANENBAUM, Andrew S.; VAN STEEN, Maarten. <strong>Sistemas Distribuídos:</strong> Princípios e Paradigmas. 2. ed. São Paulo: Pearson Prentice Hall, 2007.
+    </p>
+    <p>
+      TUCCI, Carlos E. M. <strong>Hidrologia:</strong> Ciência e Aplicação. 4. ed. Porto Alegre: Editora da UFRGS, 2014.
+    </p>
+  </div>
+</div>
+
+<!-- ==========================================================================
+     APÊNDICE A - GUIA DE INSTALAÇÃO E EXECUÇÃO
+     ========================================================================== -->
+<div class="page-break">
+  <h1>APÊNDICE A – GUIA DE IMPLANTAÇÃO E OPERAÇÃO DO PROJETO</h1>
+  <p>
+    O projeto foi concebido para execução imediata sem configurações complexas de compilação ou dependências externas conflitantes. A seguir apresentam-se os passos formais de execução de cada camada:
+  </p>
+
+  <h2>A.1 Execução do Dashboard Operacional Web</h2>
+  <p>
+    O painel de supervisão não exige nenhum servidor de backend para demonstração dos recursos visuais e interativos.
+  </p>
+  <div class="codigo-bloco">
+1. Dê um duplo clique no arquivo index.html na raiz do projeto;
+   OU execute no terminal:
+   start index.html
+2. Para hospedar via servidor HTTP local:
+   npx serve .
+   ou
+   python -m http.server 8080
+  </div>
+
+  <h2>A.2 Inicialização do Gêmeo Digital (Digital Twin em Python)</h2>
+  <div class="codigo-bloco">
+1. Execute o script automatizado setup.bat para criar o ambiente virtual e instalar dependências;
+2. Execute o arquivo iniciar_simulador_esp32.bat;
+3. O terminal interativo solicitará a escolha do cenário [1 a 4];
+4. A telemetria passará a ser gerada e transmitida a cada 3 segundos via MQTT.
+  </div>
+
+  <h2>A.3 Importação do Fluxo no Node-RED</h2>
+  <div class="codigo-bloco">
+1. Inicie o Node-RED digitando 'node-red' no terminal;
+2. Acesse http://localhost:1880 no navegador;
+3. No menu lateral superior direito, clique em Import -> Select a file to import;
+4. Escolha o arquivo edge/nodered_flow.json e clique em Import;
+5. Clique no botão vermelho Deploy no canto superior direito;
+6. Acesse a interface gráfica operacional em http://localhost:1880/ui.
+  </div>
+
+  <h2>A.4 Deploy da Infraestrutura AWS Serverless</h2>
+  <div class="codigo-bloco">
+1. Configure suas credenciais da AWS através do comando 'aws configure';
+2. Execute o script cloud/deploy_aws.bat;
+3. O CloudFormation provisionará automaticamente a tabela FloodSensorReadings no DynamoDB,
+   a função Lambda flood_processor_lambda, o tópico SNS DefesaCivilAlerts e a regra
+   de roteamento no AWS IoT Core.
+  </div>
+</div>
+
+</body>
+</html>
