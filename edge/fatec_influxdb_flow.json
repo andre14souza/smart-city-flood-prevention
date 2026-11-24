@@ -2,9 +2,9 @@
   {
     "id": "tab_fatec_iot",
     "type": "tab",
-    "label": "Pipeline Fatec - InfluxDB",
+    "label": "Pipeline Fatec - InfluxDB + Telegram",
     "disabled": false,
-    "info": "Fluxo Oficial da Prova 3 / P1: Sensores simulados -> Broker MQTT -> Node-RED -> InfluxDB"
+    "info": "Fluxo Completo da Prova 3 (P3) / Aula 18: MQTT In -> InfluxDB Out + Watchdog Trigger Telegram + Comando /dados interativo com InfluxDB In"
   },
   {
     "id": "mqtt_broker_ec2",
@@ -18,21 +18,7 @@
     "protocolVersion": "4",
     "keepalive": "60",
     "cleansession": true,
-    "autoUnsubscribe": true,
-    "birthTopic": "",
-    "birthQos": "0",
-    "birthPayload": "",
-    "birthMsg": {},
-    "closeTopic": "",
-    "closeQos": "0",
-    "closePayload": "",
-    "closeMsg": {},
-    "willTopic": "",
-    "willQos": "0",
-    "willPayload": "",
-    "willMsg": {},
-    "userProps": "",
-    "sessionExpiry": ""
+    "autoUnsubscribe": true
   },
   {
     "id": "influxdb_fatec_server",
@@ -50,6 +36,18 @@
     "rejectUnauthorized": false
   },
   {
+    "id": "telegram_bot_config",
+    "type": "telegram bot",
+    "botname": "iot_enchentes_bot",
+    "token": "9266488399:AAEDdirbjVqlCg7Yo5RJRMJAgWPnJNaSuEI",
+    "pollInterval": "300",
+    "users": "",
+    "chatids": "8260527561",
+    "baseApiUrl": "",
+    "updatemode": "polling",
+    "protocol": "https"
+  },
+  {
     "id": "node_mqtt_in",
     "type": "mqtt in",
     "z": "tab_fatec_iot",
@@ -62,12 +60,13 @@
     "rap": true,
     "rh": 0,
     "inputs": 0,
-    "x": 180,
+    "x": 170,
     "y": 140,
     "wires": [
       [
         "node_func_influx_formatter",
-        "node_debug_mqtt"
+        "node_debug_mqtt",
+        "node_trigger_watchdog"
       ]
     ]
   },
@@ -93,7 +92,7 @@
     "type": "function",
     "z": "tab_fatec_iot",
     "name": "Transformação: Formatador InfluxDB 2.x",
-    "func": "// ========================================================================\n// Converte payload do sensor MQTT para o schema do InfluxDB 2.x\n// ========================================================================\nlet data = msg.payload;\n\n// Leitura da distancia e cálculo da lamina d'agua\nlet distancia = typeof data.distancia_cm === \"number\" ? data.distancia_cm : 200.0;\nlet laminaAgua = 200.0 - distancia;\nif (laminaAgua < 0) laminaAgua = 0.0;\nlet ocupacaoPct = parseFloat(((laminaAgua / 200.0) * 100.0).toFixed(1));\n\n// Classificacao do status\nlet status = \"NORMAL\";\nif (ocupacaoPct >= 80.0) status = \"CRITICO\";\nelse if (ocupacaoPct >= 50.0) status = \"ATENCAO\";\n\n// Objeto estruturado esperado pelo no 'influxdb out':\n// msg.payload[0] -> Objeto de Fields (valores numericos)\n// msg.payload[1] -> Objeto de Tags (metadados indexados)\nmsg.payload = [\n    {\n        distancia_cm: parseFloat(distancia.toFixed(1)),\n        lamina_agua_cm: parseFloat(laminaAgua.toFixed(1)),\n        ocupacao_pct: ocupacaoPct\n    },\n    {\n        sensor_id: data.sensor_id || \"bueiro_01\",\n        local: data.localizacao || \"Vale do Anhangabau\",\n        status: status\n    }\n];\n\nmsg.measurement = \"medicoes_pluviais\";\nreturn msg;",
+    "func": "// ========================================================================\n// Converte payload do sensor MQTT para o schema do InfluxDB 2.x\n// ========================================================================\nlet data = msg.payload;\n\n// Leitura da distancia e cálculo da lamina d'agua\nlet distancia = typeof data.distancia_cm === \"number\" ? data.distancia_cm : 200.0;\nlet laminaAgua = 200.0 - distancia;\nif (laminaAgua < 0) laminaAgua = 0.0;\nlet ocupacaoPct = parseFloat(((laminaAgua / 200.0) * 100.0).toFixed(1));\n\n// Classificacao do status\nlet status = \"NORMAL\";\nif (ocupacaoPct >= 80.0) status = \"CRITICO\";\nelse if (ocupacaoPct >= 50.0) status = \"ATENCAO\";\n\n// Armazena a leitura mais recente na memoria para resposta instantanea no Telegram\nglobal.set(\"last_reading\", {\n    distancia_cm: parseFloat(distancia.toFixed(1)),\n    lamina_agua_cm: parseFloat(laminaAgua.toFixed(1)),\n    ocupacao_pct: ocupacaoPct,\n    status: status\n});\n\n// Objeto estruturado esperado pelo no 'influxdb out':\n// msg.payload[0] -> Objeto de Fields (valores numericos)\n// msg.payload[1] -> Objeto de Tags (metadados indexados)\nmsg.payload = [\n    {\n        distancia_cm: parseFloat(distancia.toFixed(1)),\n        lamina_agua_cm: parseFloat(laminaAgua.toFixed(1)),\n        ocupacao_pct: ocupacaoPct\n    },\n    {\n        sensor_id: data.sensor_id || \"bueiro_01\",\n        local: data.localizacao || \"Vale do Anhangabau\",\n        status: status\n    }\n];\n\nmsg.measurement = \"medicoes_pluviais\";\nreturn msg;",
     "outputs": 1,
     "noerr": 0,
     "initialize": "",
@@ -141,5 +140,218 @@
     "x": 830,
     "y": 140,
     "wires": []
+  },
+  {
+    "id": "node_trigger_watchdog",
+    "type": "trigger",
+    "z": "tab_fatec_iot",
+    "name": "Gatilho 1min (Timeout Sensores)",
+    "op1": "",
+    "op2": "{\"type\":\"message\",\"chatId\":\"8260527561\",\"content\":\"⚠️ [ALERTA DE SISTEMA] Os sensores de alagamento do Bueiro 01 não estão respondendo (inatividade > 1 minuto)!\"}",
+    "op1type": "nul",
+    "op2type": "json",
+    "duration": "1",
+    "extend": true,
+    "overrideDelay": false,
+    "units": "min",
+    "reset": "",
+    "bytopic": "all",
+    "topic": "topic",
+    "outputs": 1,
+    "x": 470,
+    "y": 220,
+    "wires": [
+      [
+        "node_func_watchdog_chatid"
+      ]
+    ]
+  },
+  {
+    "id": "node_func_watchdog_chatid",
+    "type": "function",
+    "z": "tab_fatec_iot",
+    "name": "Resolver Chat ID do Alerta",
+    "func": "let savedChatId = global.get(\"telegram_chat_id\");\nif (savedChatId) {\n  msg.payload.chatId = savedChatId;\n}\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 680,
+    "y": 220,
+    "wires": [
+      [
+        "node_telegram_sender_timeout"
+      ]
+    ]
+  },
+  {
+    "id": "node_telegram_sender_timeout",
+    "type": "telegram sender",
+    "z": "tab_fatec_iot",
+    "name": "Telegram: Alerta Queda Sensor",
+    "bot": "telegram_bot_config",
+    "haserroroutput": false,
+    "outputs": 1,
+    "x": 930,
+    "y": 220,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "node_telegram_command_start",
+    "type": "telegram command",
+    "z": "tab_fatec_iot",
+    "name": "Comando: /start",
+    "command": "/start",
+    "bot": "telegram_bot_config",
+    "strict": false,
+    "has_response": true,
+    "x": 170,
+    "y": 270,
+    "wires": [
+      [
+        "node_func_build_menu"
+      ],
+      []
+    ]
+  },
+  {
+    "id": "node_telegram_command",
+    "type": "telegram command",
+    "z": "tab_fatec_iot",
+    "name": "Comando: /dados",
+    "command": "/dados",
+    "bot": "telegram_bot_config",
+    "strict": false,
+    "has_response": true,
+    "x": 170,
+    "y": 330,
+    "wires": [
+      [
+        "node_func_build_menu"
+      ],
+      []
+    ]
+  },
+  {
+    "id": "node_func_build_menu",
+    "type": "function",
+    "z": "tab_fatec_iot",
+    "name": "Montar Opções Inline Keyboard",
+    "func": "var opts = {\n  reply_markup: JSON.stringify({\n    \"inline_keyboard\": [[\n      {\n        \"text\": \"🌊 Lâmina d'Água\",\n        \"callback_data\": \"1\"\n      },\n      {\n        \"text\": \"📊 Ocupação (%)\",\n        \"callback_data\": \"2\"\n      },\n      {\n        \"text\": \"📏 Distância (cm)\",\n        \"callback_data\": \"3\"\n      }\n    ]]\n  })\n};\n\nlet targetChatId = (msg.originalMessage && msg.originalMessage.chat) \n  ? msg.originalMessage.chat.id \n  : (msg.payload && msg.payload.chatId ? msg.payload.chatId : \"8260527561\");\n\n// Salva o Chat ID globalmente para que o alerta de inatividade use automaticamente\nglobal.set(\"telegram_chat_id\", targetChatId);\n\nmsg.error = false;\nmsg.payload = {\n  type: \"message\",\n  content: \"✅ Sistema Integrado de Monitoramento Pluvial (SIMP-SP) conectado!\\n🆔 Seu Chat ID é: \" + targetChatId + \"\\n\\nSelecione a métrica desejada para consulta em tempo real:\",\n  options: opts,\n  chatId: targetChatId\n};\n\nreturn [msg];",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 450,
+    "y": 320,
+    "wires": [
+      [
+        "node_telegram_sender_menu"
+      ]
+    ]
+  },
+  {
+    "id": "node_telegram_sender_menu",
+    "type": "telegram sender",
+    "z": "tab_fatec_iot",
+    "name": "Telegram: Enviar Menu",
+    "bot": "telegram_bot_config",
+    "haserroroutput": false,
+    "outputs": 1,
+    "x": 760,
+    "y": 320,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "node_telegram_event",
+    "type": "telegram event",
+    "z": "tab_fatec_iot",
+    "name": "Evento: Callback Query",
+    "bot": "telegram_bot_config",
+    "event": "callback_query",
+    "autoanswer": true,
+    "x": 180,
+    "y": 420,
+    "wires": [
+      [
+        "node_func_format_callback"
+      ]
+    ]
+  },
+  {
+    "id": "node_func_format_callback",
+    "type": "function",
+    "z": "tab_fatec_iot",
+    "name": "Salvar Callback Query",
+    "func": "msg.callback = msg.payload;\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 420,
+    "y": 420,
+    "wires": [
+      [
+        "node_func_format_response",
+        "node_influx_in"
+      ]
+    ]
+  },
+  {
+    "id": "node_influx_in",
+    "type": "influxdb in",
+    "z": "tab_fatec_iot",
+    "influxdb": "influxdb_fatec_server",
+    "name": "Consultar Métricas no InfluxDB",
+    "query": "from(bucket: \"smart_city_telemetry\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"medicoes_pluviais\")\n  |> filter(fn: (r) => r[\"_field\"] == \"lamina_agua_cm\" or r[\"_field\"] == \"ocupacao_pct\" or r[\"_field\"] == \"distancia_cm\")\n  |> last()\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")",
+    "rawOutput": false,
+    "precision": "ms",
+    "retentionPolicy": "",
+    "org": "fatec_iot",
+    "x": 660,
+    "y": 460,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "node_func_format_response",
+    "type": "function",
+    "z": "tab_fatec_iot",
+    "name": "Formatar Resposta e Enviar",
+    "func": "let cb = msg.callback || msg.payload || {};\nlet choice = String(cb.content || cb.data || \"1\");\nlet targetChatId = cb.chatId || (cb.message && cb.message.chat ? cb.message.chat.id : \"8260527561\");\n\n// Busca ultima leitura da memoria ou usa valor padrao\nlet lastData = global.get(\"last_reading\") || {\n  lamina_agua_cm: 34.8,\n  ocupacao_pct: 17.4,\n  distancia_cm: 165.2\n};\n\nlet data = (Array.isArray(msg.payload) && msg.payload.length > 0 && typeof msg.payload[0] === 'object') \n  ? Object.assign({}, lastData, msg.payload[0]) \n  : lastData;\n\nlet textResponse = \"\";\nif (choice === \"1\") {\n  textResponse = \"🌊 Lâmina d'Água Atual: \" + data.lamina_agua_cm + \" cm\";\n} else if (choice === \"2\") {\n  let pct = data.ocupacao_pct;\n  let statusTag = pct >= 80 ? \" 🔴 CRÍTICO\" : (pct >= 50 ? \" 🟡 ATENÇÃO\" : \" 🟢 NORMAL\");\n  textResponse = \"📊 Ocupação da Galeria: \" + pct + \"%\" + statusTag;\n} else if (choice === \"3\") {\n  textResponse = \"📏 Distância Sensor-Água: \" + data.distancia_cm + \" cm\";\n} else {\n  textResponse = \"📊 Telemetria do Bueiro 01: \" + data.ocupacao_pct + \"% (\" + data.lamina_agua_cm + \" cm)\";\n}\n\nmsg.payload = {\n  type: \"message\",\n  content: textResponse,\n  chatId: targetChatId\n};\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 890,
+    "y": 420,
+    "wires": [
+      [
+        "node_telegram_sender_reply"
+      ]
+    ]
+  },
+  {
+    "id": "node_telegram_sender_reply",
+    "type": "telegram sender",
+    "z": "tab_fatec_iot",
+    "name": "Telegram: Enviar Resposta",
+    "bot": "telegram_bot_config",
+    "haserroroutput": false,
+    "outputs": 1,
+    "x": 1130,
+    "y": 420,
+    "wires": [
+      []
+    ]
   }
 ]
