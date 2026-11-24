@@ -10,7 +10,7 @@
     "id": "mqtt_broker_ec2",
     "type": "mqtt-broker",
     "name": "Mosquitto EC2",
-    "broker": "ec2-18-228-150-10.sa-east-1.compute.amazonaws.com",
+    "broker": "127.0.0.1",
     "port": "1883",
     "clientid": "NodeRED_Fatec_Subscriber",
     "autoConnect": true,
@@ -66,6 +66,51 @@
       [
         "node_func_influx_formatter",
         "node_debug_mqtt",
+        "node_trigger_watchdog"
+      ]
+    ]
+  },
+  {
+    "id": "node_inject_auto_telemetry",
+    "type": "inject",
+    "z": "tab_fatec_iot",
+    "name": "Gerador de Chuva (a cada 3s)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "3",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "0.5",
+    "topic": "",
+    "payload": "tick",
+    "payloadType": "str",
+    "x": 190,
+    "y": 90,
+    "wires": [
+      [
+        "node_func_telemetry_simulator"
+      ]
+    ]
+  },
+  {
+    "id": "node_func_telemetry_simulator",
+    "type": "function",
+    "z": "tab_fatec_iot",
+    "name": "Simulador de Nível d'Água (Dinâmico)",
+    "func": "// ========================================================\n// Simula a dinâmica contínua de chuva e escoamento urbano\n// ========================================================\nlet waterLevel = flow.get(\"sim_water_level\") || 30.0;\nlet delta = flow.get(\"sim_delta\") || 3.5;\n\n// Incremento estocástico\nwaterLevel += delta + (Math.random() * 1.0 - 0.5);\n\n// Ciclo de transbordamento e escoamento\nif (waterLevel >= 185.0) {\n    delta = -4.5; // Calha cheia: inicia escoamento\n} else if (waterLevel <= 25.0) {\n    delta = 4.0;  // Calha vazia: nova chuva se inicia\n}\n\nflow.set(\"sim_water_level\", waterLevel);\nflow.set(\"sim_delta\", delta);\n\nlet totalDepth = 200.0;\nlet dist = Math.max(5.0, Math.min(200.0, totalDepth - waterLevel));\n\nmsg.payload = {\n    sensor_id: \"bueiro_01\",\n    localizacao: \"Vale do Anhangabau - SP\",\n    distancia_cm: parseFloat(dist.toFixed(1)),\n    timestamp_epoch_ms: Date.now()\n};\n\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 480,
+    "y": 90,
+    "wires": [
+      [
+        "node_func_influx_formatter",
         "node_trigger_watchdog"
       ]
     ]
